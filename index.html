@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NoxStream — Le cinéma sans limites</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.nox-managed-profiles{display:grid;gap:10px;margin:18px 0}.nox-managed-profile{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04);color:inherit;text-align:left;cursor:pointer}.nox-managed-profile.active{border-color:rgba(255,255,255,.35)}.nox-managed-profile img{width:44px;height:44px;border-radius:50%;object-fit:cover}.nox-managed-profile span{font-weight:700}.nox-managed-profile small{color:#aaa}.nox-settings-note{font-size:13px;color:#999;margin-top:12px}.nox-profile-modal-card{position:relative}.nox-profile-modal-card>.close{position:absolute;right:12px;top:10px;z-index:2}</style>
+<style>
+/* À LA UNE — l'image reste 4 s puis passe en fondu */
+.hero-art{opacity:1;transition:opacity .8s ease}
+.hero-art.nox-featured-fade{opacity:0}
+</style>
+<style>
+/* V48 — état après déconnexion : accueil conservé avec création de profil + petite connexion */
+.nox-logged-out-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 18px;padding:14px 16px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(20,20,20,.72);backdrop-filter:blur(10px)}
+.nox-logged-out-bar[hidden]{display:none!important}
+.nox-logged-out-copy{display:flex;flex-direction:column;gap:3px}
+.nox-logged-out-copy strong{font-size:15px}
+.nox-logged-out-copy span{font-size:12px;color:#999}
+.nox-logged-out-actions{display:flex;align-items:center;gap:8px}
+.nox-logged-out-actions .primary{white-space:nowrap}
+.nox-logged-out-login{white-space:nowrap;padding:9px 13px!important;font-size:13px!important}
+@media(max-width:700px){.nox-logged-out-bar{align-items:flex-start;flex-direction:column}.nox-logged-out-actions{width:100%}.nox-logged-out-actions .primary{flex:1}.nox-logged-out-login{flex:0 0 auto}}
+</style>
+
+<style id="nox-auth-presentation-style">
+#presentation-noxstream #noxCreateProfile{
+  width:180px !important;height:180px !important;
+  min-width:180px !important;min-height:180px !important;
+  box-sizing:border-box !important;
+  border:1px solid #D4AF37 !important;
+  border-radius:1px !important;
+  background:rgba(0,0,0,.80) !important;
+  color:#E6C15A !important;
+}
+#splash #noxLoginCompact{
+  opacity:0;
+  transform:translateY(8px);
+  pointer-events:none;
+  transition:opacity .55s ease,transform .55s ease;
+}
+#splash #noxLoginCompact.nox-login-visible{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+</style>
+
+</head>
+<body>
+
+<!-- Page de présentation NoxStream -->
+<div id="splash" class="splash" aria-label="Présentation NoxStream">
+  <div class="splash-image"></div>
+  <div class="splash-overlay"></div>
+  <div class="splash-content">
+    <div class="splash-logo">Nox<span>Stream</span></div>
+    <div class="splash-line"></div>
+    <small>LE CINÉMA SANS LIMITES</small>
+    <div class="splash-profile" id="splashProfile">
+      <div class="splash-profile-title" id="noxProfileExperienceTitle">Personnalisez votre expérience</div>
+      <button class="primary splash-profile-button" id="noxCreateProfile" type="button">Créer un profil</button>
+      <button type="button" id="noxLoginCompact" class="nox-login-compact">Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="noxAccountModal" class="nox-profile-modal" aria-hidden="true">
+  <div class="nox-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="noxAccountModalTitle">
+    <button type="button" class="close" id="noxAccountClose" aria-label="Fermer">×</button>
+    <div class="eyebrow">COMPTE NOXSTREAM</div>
+    <h2 id="noxAccountModalTitle">Se connecter</h2>
+    <p id="noxAccountModalText">Votre compte a déjà été créé. Connectez-vous avec votre adresse e-mail et votre mot de passe.</p>
+    <form id="noxAccountForm">
+      <label for="noxAccountEmail">Adresse e-mail</label>
+      <input id="noxAccountEmail" type="email" autocomplete="username" required placeholder="votre@email.com">
+      <label for="noxAccountPassword">Mot de passe</label>
+      <input id="noxAccountPassword" type="password" autocomplete="new-password" required placeholder="Votre mot de passe">
+      <div id="noxAccountConfirmWrap" style="display:none">
+        <label for="noxAccountConfirm">Confirmer le mot de passe</label>
+        <input id="noxAccountConfirm" type="password" autocomplete="new-password" placeholder="Confirmez votre mot de passe">
+      </div>
+      <div class="nox-profile-error" id="noxAccountError" aria-live="polite"></div>
+      <button class="primary" id="noxAccountSubmit" type="submit">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<div id="noxProfileModal" class="nox-profile-modal" aria-hidden="true">
+  <div class="nox-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="noxProfileModalTitle">
+    <div class="eyebrow">VOTRE PROFIL</div>
+    <h2 id="noxProfileModalTitle">Choisissez votre pseudo</h2>
+    <p>Entrez le pseudo qui sera utilisé pour votre profil NoxStream.</p>
+    <form id="noxProfileForm">
+      <div class="nox-avatar-label">Choisissez votre avatar</div>
+      <div class="nox-avatar-picker" id="noxAvatarPicker" role="radiogroup" aria-label="Choisissez votre avatar">
+        <button class="nox-avatar-option is-selected" type="button" data-avatar="avatars/avatar-01.svg" role="radio" aria-checked="true"><img src="avatars/avatar-01.svg" alt="Avatar 1"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-02.svg" role="radio" aria-checked="false"><img src="avatars/avatar-02.svg" alt="Avatar 2"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-03.svg" role="radio" aria-checked="false"><img src="avatars/avatar-03.svg" alt="Avatar 3"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-04.svg" role="radio" aria-checked="false"><img src="avatars/avatar-04.svg" alt="Avatar 4"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-05.svg" role="radio" aria-checked="false"><img src="avatars/avatar-05.svg" alt="Avatar 5"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-06.svg" role="radio" aria-checked="false"><img src="avatars/avatar-06.svg" alt="Avatar 6"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-07.svg" role="radio" aria-checked="false"><img src="avatars/avatar-07.svg" alt="Avatar 7"></button>
+        <button class="nox-avatar-option" type="button" data-avatar="avatars/avatar-08.svg" role="radio" aria-checked="false"><img src="avatars/avatar-08.svg" alt="Avatar 8"></button>
+      </div>
+      <label for="noxProfilePseudo">Pseudo de profil</label>
+      <input id="noxProfilePseudo" name="pseudo" type="text" maxlength="30" autocomplete="nickname" placeholder="Votre pseudo" required>
+      <div class="nox-profile-error" id="noxProfileError" aria-live="polite"></div>
+      <button class="primary" type="submit">Créer mon profil</button>
+    </form>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <button class="brand" data-page="home">N</button>
+    <button class="side-btn active" data-page="home" title="Accueil">⌂</button>
+    <a class="side-btn" href="films.html" title="Films">▣</a>
+    <button class="side-btn" data-page="series" title="Séries">▤</button>
+    <button class="side-btn" data-page="cinema" title="Au cinéma">◉</button>
+    <button class="side-btn" data-page="list" title="Ma liste">♡</button>
+    <div class="side-spacer"></div>
+    <button class="side-btn" data-page="search" title="Recherche">⌕</button>
+    <button class="side-btn" data-page="profile" title="Profil">◌</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Ouvrir le menu">☰</button>
+      <button class="wordmark" data-page="home">Nox<span>Stream</span></button>
+
+      
+
+<nav class="topnav">
+        <button class="toplink active" data-page="home">Accueil</button>
+        <a class="toplink" href="films.html">Films</a>
+        <button class="toplink" data-page="series">Séries</button>
+        <button class="toplink" data-page="cinema">En ce moment</button>
+        <button class="toplink" data-page="list">Ma liste</button>
+      </nav>
+
+      <button class="search-mini" id="searchOpen">⌕ <span>Rechercher...</span></button>
+      <button class="avatar" id="noxTopProfileAvatar" data-page="profile">G</button>
+    </header>
+
+    
+
+<section id="home" class="page active-page">
+<section id="noxLoggedOutBar" class="nox-logged-out-bar" aria-label="Profil NoxStream" hidden>
+  <div class="nox-logged-out-copy">
+    <strong>Votre profil</strong>
+    <span>Créez un profil ou connectez-vous.</span>
+  </div>
+  <div class="nox-logged-out-actions">
+    <button type="button" class="primary" id="noxLoggedOutCreate">Créer un profil</button>
+    <button type="button" class="secondary nox-logged-out-login" id="noxLoggedOutLogin">Se connecter</button>
+  </div>
+</section>
+
+      <div class="hero">
+        <div class="hero-art art-dune">
+          <div class="hero-title">DUNE<small>PARTIE DEUX</small></div>
+        </div>
+
+        <div class="hero-copy">
+          <div class="eyebrow">À LA UNE · NOXSTREAM</div>
+          <h1>Dune</h1>
+          <div class="meta">2024 <i>•</i> 2h 46 <i>•</i> Science-fiction <i>•</i> 4K</div>
+          <p>Paul Atreides s'unit à Chani et aux Fremen pour préparer sa revanche contre ceux qui ont détruit sa famille.</p>
+          <div class="actions">
+            <button class="secondary" data-film="Dune — Partie Deux">Plus d'infos</button>
+          </div>
+        </div>
+      </div>
+<section class="section nox-dernieres-sorties-section" id="noxDernieresSortiesSection">
+<h2>Les dernières sorties ciné</h2>
+<div class="rail" id="noxDernieresSortiesRow"></div>
+</section>
+
+
+
+      
+
+    <div id="noxAutoBlocks" class="nox-auto-blocks" aria-label="Sélections automatiques"></div>
+
+    <section id="series" class="page">
+      <div class="page-title"><div><div class="eyebrow">NOXSTREAM</div><h1>Séries</h1></div></div>
+      <div class="catalog" id="seriesCatalog"></div>
+    </section>
+
+    <section id="cinema" class="page">
+      <div class="page-title"><div><div class="eyebrow">SORTIES</div><h1>En ce moment au cinéma</h1></div></div>
+      <div class="cinema-feature">
+        <div class="cinema-art art-joker"><span>JOKER<br><small>FOLIE À DEUX</small></span></div>
+        <div><div class="eyebrow">À L'AFFICHE</div><h2>Joker : Folie à Deux</h2><p>Découvrez les films actuellement à l'affiche et préparez votre prochaine séance.</p><button class="primary">Voir les séances</button></div>
+      </div>
+      <div class="section"><div class="section-head"><h2>Autres sorties</h2></div><div class="rail" id="cinemaRail"></div></div>
+    </section>
+
+    <section id="list" class="page">
+      <div class="page-title"><div><div class="eyebrow">VOTRE ESPACE</div><h1>Ma liste</h1></div></div>
+      <div class="list-tabs"><button class="chip active">Films</button><button class="chip">Séries</button><button class="chip">Animés</button></div>
+      <div class="catalog" id="listCatalog"></div>
+    </section>
+
+    <section id="search" class="page">
+      <div class="search-page">
+        <div class="eyebrow">RECHERCHE</div>
+        <h1>Trouvez votre prochain film.</h1>
+        <div class="search-big"><span>⌕</span><input id="searchInput" placeholder="Un film, une série, un acteur..."></div>
+        <div id="searchResults" class="catalog compact"></div>
+      </div>
+    </section>
+
+    <section id="profile" class="page">
+      <div class="profile-box">
+        <div class="profile-avatar" id="noxProfileAvatar"></div>
+        <div><div class="eyebrow">PROFIL</div><h1 id="noxProfileName"></h1><p>Compte Premium · 4 écrans simultanés</p></div>
+      </div>
+      <div class="settings">
+        <button type="button" id="noxManageProfiles">◌ <span>Gérer les profils</span><b>›</b></button>
+        <button type="button">◷ <span>Historique de lecture</span><b>›</b></button>
+        <button type="button" id="noxOpenSettings">⚙ <span>Paramètres</span><b>›</b></button>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+
+<div id="mobileNav" class="mobile-nav">
+  <button data-page="home" class="active">⌂<small>Accueil</small></button>
+  <button data-page="search">⌕<small>Recherche</small></button>
+  <button data-page="list">♡<small>Ma liste</small></button>
+  <button data-page="profile">◌<small>Profil</small></button>
+</div>
+
+
+
+<!-- Popup BLOCK PUB — mobile/tablette uniquement -->
+<div id="noxBlockPub" class="nox-block-pub" role="dialog" aria-modal="true" aria-labelledby="noxBlockPubTitle" aria-hidden="true">
+  <div class="nox-block-pub-card">
+    <button id="noxBlockPubClose" class="nox-block-pub-close" type="button" aria-label="Fermer">×</button>
+    <h2 id="noxBlockPubTitle">BLOCK PUB</h2>
+    <p>Certains de nos lecteurs peuvent occasionnellement afficher des publicités ou des fenêtres publicitaires. Pour limiter ces publicités et profiter de NoxStream dans de meilleures conditions, nous vous recommandons d’installer un bloqueur de publicités.</p>
+    <div id="noxBlockPubApp" class="nox-block-pub-app"></div>
+    <button id="noxBlockPubAlready" class="nox-block-pub-already" type="button">J’EN POSSÈDE DÉJÀ UN</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var popup=document.getElementById('noxBlockPub');
+  var close=document.getElementById('noxBlockPubClose');
+  var already=document.getElementById('noxBlockPubAlready');
+  var app=document.getElementById('noxBlockPubApp');
+  var STORAGE_KEY='noxstream_block_pub_seen';
+  if(!popup||!app)return;
+
+  function getDeviceApp(){
+    var ua=navigator.userAgent||'';
+    if(/Android/i.test(ua)){
+      return {
+        name:'Adblock Browser',
+        store:'Télécharger sur Google Play',
+        url:'https://play.google.com/store/apps/details?id=org.adblockplus.browser',
+        icon:'https://play-lh.googleusercontent.com/y68jkB3DxQgXhynlnOYjoQvquDVWkiRXibveFAEhap0vBvev6oSa4im7G5RcW3EH2IPp9CJzDHWuZjLf-Xx_%3Dw240-h480'
+      };
+    }
+    if(/iPhone|iPad|iPod/i.test(ua)){
+      return {
+        name:'AdBlocker par 1Blocker',
+        store:'Télécharger sur l’App Store',
+        url:'https://apps.apple.com/fr/app/adblocker-par-1blocker/id1365531024',
+        icon:'https://cdn.jim-nielsen.com/macos/512/1blocker-ad-blocker-privacy-2021-05-12.png?rf=1024'
+      };
+    }
+    return null;
+  }
+
+  var deviceApp=getDeviceApp();
+  if(deviceApp){
+    var link=document.createElement('a');
+    link.className='nox-block-pub-link';
+    link.href=deviceApp.url;
+    link.target='_blank';
+    link.rel='noopener noreferrer';
+    link.innerHTML='<img src="'+deviceApp.icon+'" alt="">'+'<span><strong>'+deviceApp.name+'</strong><small>'+deviceApp.store+'</small></span>';
+    app.appendChild(link);
+  }
+
+  function show(){
+    if(localStorage.getItem(STORAGE_KEY)==='1')return;
+    if(localStorage.getItem('noxstream_profile_created')!=='1')return;
+    if(!deviceApp)return;
+    popup.classList.add('nox-block-pub-visible');
+    popup.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+  function hide(remember){
+    if(remember){
+      try{localStorage.setItem(STORAGE_KEY,'1');}catch(e){}
+    }
+    popup.classList.remove('nox-block-pub-visible');
+    popup.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+
+  close.addEventListener('click',function(){hide(false);});
+  already.addEventListener('click',function(){hide(true);});
+  popup.addEventListener('click',function(e){if(e.target===popup)hide(false);});
+  window.noxShowBlockPubAfterProfile=function(){show();};
+})();
+</script>
+
+<script src="app.js"></script>
+<script defer src="nox-block-engine.js"></script>
+<script id="noxDernieresSortiesScript">
+(function(){
+function dateOf(f){
+ var v=f&&(f.releaseDate||f.release_date||f.date||f.sortie||f.release);
+ if(!v)return 0;
+ var t=Date.parse(String(v)); return isNaN(t)?0:t;
+}
+function render(){
+ var row=document.getElementById('noxDernieresSortiesRow');
+ if(!row||!Array.isArray(window.films))return;
+ var a=window.films.filter(function(f){return f&&f.name;}).slice().sort(function(x,y){return dateOf(y)-dateOf(x);});
+ row.innerHTML='';
+ a.slice(0,20).forEach(function(f){
+  var x=document.createElement('a');
+  x.className='nox-reprise-card';
+  x.href=typeof window.noxFilmPath==='function'?window.noxFilmPath(f):(f.url||'#');
+  var im=document.createElement('img'); im.src=f.poster||f.image||''; im.alt=f.name; im.loading='lazy';
+  im.onerror=function(){im.remove();x.classList.add('no-poster');};
+  var s=document.createElement('span'); s.textContent=f.name;
+  x.append(im,s); row.append(x);
+ });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render,{once:true});else render();
+window.addEventListener('load',render,{once:true});
+})();
+</script>
+
+
+<div id="noxProfileManager" class="nox-profile-modal" aria-hidden="true">
+  <div class="nox-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="noxProfileManagerTitle">
+    <button type="button" class="close" id="noxProfileManagerClose" aria-label="Fermer">×</button>
+    <div class="eyebrow">PROFILS</div>
+    <h2 id="noxProfileManagerTitle">Gérer les profils</h2>
+    <p>Choisissez le profil à utiliser ou créez-en un nouveau.</p>
+    <div id="noxManagedProfiles" class="nox-managed-profiles"></div>
+    <button type="button" class="primary" id="noxAddProfile">＋ Ajouter un profil</button>
+  </div>
+</div>
+<div id="noxSettingsModal" class="nox-profile-modal" aria-hidden="true">
+  <div class="nox-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="noxSettingsTitle">
+    <button type="button" class="close" id="noxSettingsClose" aria-label="Fermer">×</button>
+    <div class="eyebrow">PARAMÈTRES</div>
+    <h2 id="noxSettingsTitle">Paramètres</h2>
+    <p>Gestion de votre session sur cet appareil.</p>
+    <div id="noxAdminPushProfile" style="display:none;margin:0 0 14px">
+      <button type="button" class="primary" id="noxAdminPushButton">🔔 Activer les notifications</button>
+      <div id="noxAdminPushMessage" style="margin-top:7px;font-size:12px;color:#aaa;text-align:center"></div>
+    </div>
+    <button type="button" class="primary" id="noxLogoutProfile">Se déconnecter du profil</button>
+    <p class="nox-settings-note">La déconnexion retire le profil actif de cet appareil et revient à l’écran de création de profil.</p>
+  </div>
+</div>
+
+
+<script id="noxProfileActionsScript">
+(function(){
+  'use strict';
+  var manager=document.getElementById('noxProfileManager'), settings=document.getElementById('noxSettingsModal');
+  var managerList=document.getElementById('noxManagedProfiles');
+  var profiles=[];
+  try{profiles=JSON.parse(localStorage.getItem('noxstream_profiles')||'[]'); if(!Array.isArray(profiles))profiles=[];}catch(e){profiles=[];}
+  var avatars=Array.from({length:8},function(_,i){return 'avatars/avatar-0'+(i+1)+'.svg';});
+  function save(){try{localStorage.setItem('noxstream_profiles',JSON.stringify(profiles));}catch(e){}}
+  function cur(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function esc(v){return String(v||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function open(x){x.classList.add('is-open');x.setAttribute('aria-hidden','false');}
+  function close(x){x.classList.remove('is-open');x.setAttribute('aria-hidden','true');}
+  function ensureCurrent(){var p=cur('noxstream_profile_pseudo'),a=cur('noxstream_profile_avatar')||avatars[0];if(p&&!profiles.some(function(x){return x.pseudo===p;})){profiles.unshift({pseudo:p,avatar:a});profiles=profiles.slice(0,4);save();}}
+  function render(){ensureCurrent();var current=cur('noxstream_profile_pseudo');managerList.innerHTML='';profiles.slice(0,4).forEach(function(profile){var b=document.createElement('button');b.type='button';b.className='nox-managed-profile'+(profile.pseudo===current?' active':'');b.innerHTML='<img src="'+esc(profile.avatar)+'" alt=""><span>'+esc(profile.pseudo)+'</span>'+(profile.pseudo===current?'<small>Profil actuel</small>':'');b.onclick=function(){try{localStorage.setItem('noxstream_profile_created','1');localStorage.setItem('noxstream_profile_pseudo',profile.pseudo);localStorage.setItem('noxstream_profile_avatar',profile.avatar);}catch(e){}location.reload();};managerList.appendChild(b);});}
+  document.getElementById('noxManageProfiles')?.addEventListener('click',function(){render();open(manager);});
+  document.getElementById('noxOpenSettings')?.addEventListener('click',function(){open(settings);});
+  document.getElementById('noxProfileManagerClose')?.addEventListener('click',function(){close(manager);});
+  document.getElementById('noxSettingsClose')?.addEventListener('click',function(){close(settings);});
+  [manager,settings].forEach(function(x){x?.addEventListener('click',function(e){if(e.target===x)close(x);});});
+  document.getElementById('noxAddProfile')?.addEventListener('click',function(){if(profiles.length>=4){alert('Maximum de 4 profils atteint.');return;}var p=prompt('Choisissez un pseudo pour le nouveau profil :','');if(!p)return;p=p.trim();if(p.length<2){alert('Le pseudo doit contenir au moins 2 caractères.');return;}if(profiles.some(function(x){return x.pseudo.toLowerCase()===p.toLowerCase();})){alert('Ce pseudo existe déjà.');return;}profiles.push({pseudo:p,avatar:avatars[profiles.length]||avatars[0]});save();render();});
+  document.getElementById('noxLogoutProfile')?.addEventListener('click',async function(){
+    try{
+      localStorage.removeItem('noxstream_profile_created');
+      localStorage.removeItem('noxstream_profile_pseudo');
+      localStorage.removeItem('noxstream_profile_avatar');
+      /* Le profil sélectionné (ID) est conservé pour le prochain login. */
+    }catch(e){}
+    if(typeof window.noxSignOutProfile==='function'){
+      try{await window.noxSignOutProfile();}catch(e){}
+    }
+    close(settings);
+    if(typeof window.noxResetSplash==='function')window.noxResetSplash();
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','active-page');});
+    document.querySelectorAll('[data-page]').forEach(function(b){b.classList.remove('active');});
+    var bar=document.getElementById('noxLoggedOutBar');
+    if(bar)bar.hidden=true;
+    window.scrollTo(0,0);
+  });
+})();
+</script>
+
+
+<script id="noxProfileGateScript">
+(function(){
+'use strict';
+
+var SUPABASE_URL='https://mvwtxamnwtnhzuyeaszp.supabase.co';
+var SUPABASE_KEY='sb_publishable_s3hMkVzCD-0syFvft2hH6Q_bNnXj6V5';
+var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* À LA UNE */
+(function(){
+  const FALLBACK={title:'Dune — Partie Deux',image:'https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'};
+  function applyFeatured(f){
+    if(!f)return;
+    const hero=document.querySelector('.hero-art.art-dune');
+    const title=document.querySelector('.hero-copy h1');
+    const eyebrow=document.querySelector('.hero-copy .eyebrow');
+    const info=document.querySelector('.hero-copy [data-film]');
+    if(hero&&f.image)hero.style.backgroundImage="url('"+String(f.image).replace(/'/g,"%27")+"')";
+    if(title)title.textContent=f.title||'Dune';
+    if(info)info.dataset.film=f.title||'Dune — Partie Deux';
+    if(eyebrow)eyebrow.textContent='À LA UNE · NOXSTREAM';
+  }
+  let items=[],index=0,timer=null,fadeTimer=null;
+  function showAt(i){
+    if(!items.length)return;
+    index=(i+items.length)%items.length;
+    const hero=document.querySelector('.hero-art.art-dune');
+    if(!hero){applyFeatured(items[index]);return;}
+    hero.classList.remove('nox-featured-fade');
+    clearTimeout(fadeTimer);
+    applyFeatured(items[index]);
+    if(items.length===1)return;
+    fadeTimer=setTimeout(function(){
+      hero.classList.add('nox-featured-fade');
+      setTimeout(function(){showAt(index+1);},800);
+    },6000);
+  }
+  async function load(){
+    try{
+      const r=await sb.from('nox_featured').select('title,image_url').eq('enabled',true).order('position');
+      if(!r.error&&r.data&&r.data.length){items=r.data.map(x=>({title:x.title,image:x.image_url}));showAt(0);return;}
+    }catch(e){}
+    items=[FALLBACK];showAt(0);
+  }
+  load();
+})();
+
+/* Présentation + contrôle d'accès */
+var splash=document.getElementById('splash');
+var app=document.querySelector('.app');
+var createButton=document.getElementById('noxCreateProfile');
+var loginButton=document.getElementById('noxLoginCompact');
+var SPLASH_DISPLAY_MS=4000;
+var splashStartedAt=performance.now();
+var splashTimer=null;
+var loginRevealTimer=null;
+var splashClosed=false;
+var sessionKnown=false;
+var connected=false;
+var indexOpened=false;
+
+if(app)app.classList.add('nox-app-locked');
+
+function showHome(){
+  if(typeof window.openPage==='function'){window.openPage('home');return;}
+  var home=document.getElementById('home');
+  if(home){
+    document.querySelectorAll('.page').forEach(function(page){page.classList.remove('active-page');});
+    home.classList.add('active-page');
+  }
+}
+
+function setPresentationButtons(){
+  clearTimeout(loginRevealTimer);
+  if(!sessionKnown)return;
+  var experienceTitle=document.getElementById('noxProfileExperienceTitle');
+  if(connected){
+    if(createButton)createButton.style.display='none';
+    if(loginButton){loginButton.style.display='none';loginButton.classList.remove('nox-login-visible');}
+    if(experienceTitle)experienceTitle.style.display='none';
+    return;
+  }
+  if(experienceTitle)experienceTitle.style.display='';
+  if(createButton)createButton.style.display='';
+  if(loginButton){
+    loginButton.style.display='';
+    loginButton.classList.remove('nox-login-visible');
+    loginRevealTimer=setTimeout(function(){
+      if(!connected&&sessionKnown&&loginButton)loginButton.classList.add('nox-login-visible');
+    },1000);
+  }
+}
+
+function showSplash(){
+  if(!splash)return;
+  splash.style.display='';
+  splash.classList.remove('is-hidden');
+  splashClosed=false;
+}
+
+function closeSplashAndOpenIndex(){
+  if(indexOpened)return;
+  indexOpened=true;
+  if(app)app.classList.remove('nox-app-locked');
+  showHome();
+  var bar=document.getElementById('noxLoggedOutBar');
+  if(bar)bar.hidden=true;
+  if(!splash)return;
+  splash.classList.add('is-hidden');
+  splash.addEventListener('transitionend',function handler(e){
+    if(e.propertyName!=='opacity')return;
+    splash.removeEventListener('transitionend',handler);
+    splash.style.display='none';
+    splashClosed=true;
+  });
+}
+
+function stayOnSplash(){
+  clearTimeout(splashTimer);
+  indexOpened=false;
+  splashStartedAt=performance.now();
+  showSplash();
+  if(app)app.classList.add('nox-app-locked');
+  setPresentationButtons();
+}
+
+function beginPresentation(){
+  clearTimeout(splashTimer);
+  splashStartedAt=performance.now();
+  showSplash();
+  if(!sessionKnown)return;
+  setPresentationButtons();
+
+  if(connected){
+    splashTimer=setTimeout(function(){
+      closeSplashAndOpenIndex();
+    },SPLASH_DISPLAY_MS);
+  }
+  /* Déconnecté : l'écran de présentation reste affiché.
+     L'index n'est accessible qu'après création ou connexion. */
+}
+
+async function refreshSession(){
+  try{
+    var result=await sb.auth.getSession();
+    connected=!!(result&&result.data&&result.data.session);
+    sessionKnown=true;
+    setPresentationButtons();
+
+    if(connected){
+      /* Un utilisateur déjà connecté voit la présentation 4 secondes,
+         puis arrive automatiquement sur l'index. */
+      clearTimeout(splashTimer);
+      splashTimer=setTimeout(function(){closeSplashAndOpenIndex();},SPLASH_DISPLAY_MS);
+    }else{
+      /* Déconnecté : aucune ouverture automatique de l'index. */
+      stayOnSplash();
+    }
+  }catch(e){
+    connected=false;
+    sessionKnown=true;
+    stayOnSplash();
+  }
+}
+
+window.noxResetSplash=function(){
+  connected=false;
+  sessionKnown=true;
+  stayOnSplash();
+};
+
+showSplash();
+refreshSession();
+
+var accountModal=document.getElementById('noxAccountModal');
+var accountForm=document.getElementById('noxAccountForm');
+var accountClose=document.getElementById('noxAccountClose');
+var accountError=document.getElementById('noxAccountError');
+var profileModal=document.getElementById('noxProfileModal');
+var profileForm=document.getElementById('noxProfileForm');
+var input=document.getElementById('noxProfilePseudo');
+var profileError=document.getElementById('noxProfileError');
+var avatarPicker=document.getElementById('noxAvatarPicker');
+var selectedAvatar='avatars/avatar-01.svg';
+var pseudo='';
+var selectedProfileId='';
+
+try{
+  pseudo=localStorage.getItem('noxstream_profile_pseudo')||'';
+  selectedAvatar=localStorage.getItem('noxstream_profile_avatar')||selectedAvatar;
+  selectedProfileId=localStorage.getItem('noxstream_profile_id')||'';
+}catch(e){}
+
+function applyProfile(name,avatar){
+  if(!name)return;
+  selectedAvatar=avatar||selectedAvatar;
+  document.querySelectorAll('.avatar,.profile-avatar').forEach(function(el){
+    el.textContent='';
+    var img=document.createElement('img');
+    img.src=selectedAvatar;img.alt='Avatar de '+name;img.loading='eager';
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
+    el.appendChild(img);
+  });
+  document.querySelectorAll('#profile h1').forEach(function(el){el.textContent=name;});
+  var profileName=document.getElementById('noxProfileName');
+  if(profileName)profileName.textContent=name;
+}
+
+if(pseudo)applyProfile(pseudo,selectedAvatar);
+
+var accountMode='login';
+function openAccount(mode){
+  accountMode=mode||'login';
+  var title=document.getElementById('noxAccountModalTitle');
+  var text=document.getElementById('noxAccountModalText');
+  var confirmWrap=document.getElementById('noxAccountConfirmWrap');
+  var confirmInput=document.getElementById('noxAccountConfirm');
+  var submit=document.getElementById('noxAccountSubmit');
+  if(title)title.textContent=accountMode==='signup'?'Créer un compte':'Se connecter';
+  if(text)text.textContent=accountMode==='signup'?'Créez votre compte NoxStream avec votre adresse e-mail et un mot de passe.':'Votre compte a déjà été créé. Connectez-vous avec votre adresse e-mail et votre mot de passe.';
+  if(confirmWrap)confirmWrap.style.display=accountMode==='signup'?'block':'none';
+  if(confirmInput)confirmInput.required=accountMode==='signup';
+  if(submit)submit.textContent=accountMode==='signup'?'Créer mon compte':'Se connecter';
+  if(accountError)accountError.textContent='';
+  accountModal.classList.add('is-open');
+  accountModal.setAttribute('aria-hidden','false');
+  setTimeout(function(){document.getElementById('noxAccountEmail')?.focus();},50);
+}
+function closeAccount(){
+  accountModal.classList.remove('is-open');
+  accountModal.setAttribute('aria-hidden','true');
+}
+function openProfile(){
+  profileModal.classList.add('is-open');
+  profileModal.setAttribute('aria-hidden','false');
+  setTimeout(function(){input?.focus();},50);
+}
+
+accountClose?.addEventListener('click',closeAccount);
+
+createButton?.addEventListener('click',function(){
+  if(connected)return;
+  openAccount('signup');
+});
+loginButton?.addEventListener('click',function(){
+  if(connected)return;
+  openAccount('login');
+});
+
+async function setupAdminPush(){
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
+    var {data:{user}}=await sb.auth.getUser();
+    if(!user)return;
+    var {data:adminRow,error:adminErr}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();
+    if(adminErr||!adminRow)return;
+    var box=document.getElementById('noxAdminPushProfile'),btn=document.getElementById('noxAdminPushButton'),note=document.getElementById('noxAdminPushMessage');
+    if(!box||!btn)return;
+    box.style.display='block';
+    if(Notification.permission==='granted')note.textContent='Notifications activées';
+    else if(Notification.permission==='denied')note.textContent='Notifications bloquées dans le navigateur';
+    btn.onclick=async function(){
+      btn.disabled=true;note.textContent='Activation…';
+      try{
+        var permission=await Notification.requestPermission();
+        if(permission!=='granted')throw new Error('Autorisation des notifications refusée.');
+        var reg=await navigator.serviceWorker.register('/sw.js',{scope:'/'});
+        await navigator.serviceWorker.ready;
+        var vapid='BAYk03jJJdqlDq-KgOhJauwx-6V9KxQMOaZgjgGuNPb5EM_wl-B09DOHp6-Bt8LBj3nd3s5150QYmiBitR0d6yA';
+        function b64ToUint8Array(base64){var padding='='.repeat((4-base64.length%4)%4);var raw=atob((base64+padding).replace(/-/g,'+').replace(/_/g,'/'));var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
+        var sub=await reg.pushManager.getSubscription();
+        if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToUint8Array(vapid)});
+        var sessionResult=await sb.auth.getSession(),session=sessionResult.data.session;
+        if(!session)throw new Error('Session administrateur absente.');
+        var r=await fetch(SUPABASE_URL+'/functions/v1/admin-push-subscribe',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON()})});
+        var out=await r.json().catch(()=>({}));
+        if(!r.ok||!out.ok)throw new Error(out.error||('Erreur serveur ('+r.status+')'));
+        note.textContent='Notifications activées sur cet appareil';
+        btn.textContent='🔔 Notifications activées';
+      }catch(e){note.textContent=e.message||'Impossible d’activer les notifications.';btn.disabled=false;}
+    };
+  }catch(e){}
+}
+
+async function loadProfilesForUser(uid){
+  var result=await sb.from('profiles').select('id,pseudo,avatar,is_blocked,created_at').eq('account_id',uid).order('created_at');
+  var data=result&&result.data, error=result&&result.error;
+  if(error){
+    console.error('NoxStream : impossible de charger les profils depuis Supabase.',error);
+    pseudo='';selectedAvatar='';selectedProfileId='';
+    try{localStorage.removeItem('noxstream_profile_pseudo');localStorage.removeItem('noxstream_profile_avatar');localStorage.removeItem('noxstream_profile_id');}catch(e){}
+    openAccount('login');
+    accountError.textContent='Impossible de charger ton profil. Réessaie.';
+    return;
+  }
+  if(!data||!data.length){
+    pseudo='';selectedAvatar='';selectedProfileId='';
+    try{localStorage.removeItem('noxstream_profile_pseudo');localStorage.removeItem('noxstream_profile_avatar');localStorage.removeItem('noxstream_profile_id');}catch(e){}
+    openProfile();
+    return;
+  }
+  var usable=data.filter(function(p){return !p.is_blocked;});
+  if(!usable.length){
+    accountError.textContent='Tous les profils de ce compte sont bloqués.';
+    openAccount('login');return;
+  }
+  var p=usable.find(function(x){return selectedProfileId && x.id===selectedProfileId;})||usable[0];
+  pseudo=p.pseudo||'';
+  selectedAvatar=p.avatar||'';
+  selectedProfileId=p.id||'';
+  applyProfile(pseudo,selectedAvatar);
+  try{
+    localStorage.setItem('noxstream_profile_created','1');
+    localStorage.setItem('noxstream_profile_pseudo',pseudo);
+    localStorage.setItem('noxstream_profile_avatar',selectedAvatar);
+    localStorage.setItem('noxstream_profile_id',selectedProfileId);
+  }catch(e){}
+  closeAccount();
+  closeSplashAndOpenIndex();
+}
+
+accountForm?.addEventListener('submit',async function(e){
+  e.preventDefault();
+  var email=document.getElementById('noxAccountEmail').value.trim().toLowerCase();
+  var password=document.getElementById('noxAccountPassword').value;
+
+  if(accountMode==='signup'){
+    var confirm=document.getElementById('noxAccountConfirm')?.value||'';
+    if(password.length<8){accountError.textContent='Le mot de passe doit contenir au moins 8 caractères.';return;}
+    if(password!==confirm){accountError.textContent='Les deux mots de passe ne correspondent pas.';return;}
+    accountError.textContent='Création du compte…';
+    var sign=await sb.auth.signUp({email,password});
+    if(sign.error){accountError.textContent=sign.error.message||'Impossible de créer le compte.';return;}
+    if(!sign.data.user){accountError.textContent='Impossible de créer le compte.';return;}
+    if(sign.data.session){
+      connected=true;sessionKnown=true;
+      pseudo='';selectedAvatar='';
+      try{localStorage.removeItem('noxstream_profile_pseudo');localStorage.removeItem('noxstream_profile_avatar');}catch(e){}
+      closeAccount();
+      await loadProfilesForUser(sign.data.user.id);
+    }else{
+      accountError.textContent='Compte créé. Vérifie ton e-mail pour confirmer ton adresse, puis connecte-toi.';
+      accountMode='login';
+      var title=document.getElementById('noxAccountModalTitle'),text=document.getElementById('noxAccountModalText'),confirmWrap=document.getElementById('noxAccountConfirmWrap'),submit=document.getElementById('noxAccountSubmit');
+      if(title)title.textContent='Se connecter';
+      if(text)text.textContent='Ton compte est créé. Confirme ton e-mail puis connecte-toi.';
+      if(confirmWrap)confirmWrap.style.display='none';
+      if(submit)submit.textContent='Se connecter';
+    }
+    return;
+  }
+
+  accountError.textContent='Connexion…';
+  var loginResult=await sb.auth.signInWithPassword({email,password});
+  if(loginResult.error){accountError.textContent='E-mail ou mot de passe incorrect.';return;}
+  connected=true;sessionKnown=true;
+  pseudo='';selectedAvatar='';
+  try{localStorage.removeItem('noxstream_profile_pseudo');localStorage.removeItem('noxstream_profile_avatar');}catch(e){}
+  applyProfile('', '');
+  closeAccount();
+  await loadProfilesForUser(loginResult.data.user.id);
+});
+
+if(avatarPicker){
+  avatarPicker.querySelectorAll('.nox-avatar-option').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      selectedAvatar=btn.getAttribute('data-avatar')||selectedAvatar;
+      avatarPicker.querySelectorAll('.nox-avatar-option').forEach(function(b){
+        var on=b===btn;b.classList.toggle('is-selected',on);b.setAttribute('aria-checked',on?'true':'false');
+      });
+    });
+  });
+}
+
+profileForm?.addEventListener('submit',async function(e){
+  e.preventDefault();
+  var name=(input.value||'').trim();
+  if(name.length<2){profileError.textContent='Veuillez saisir un pseudo d’au moins 2 caractères.';return;}
+  var {data:{user}}=await sb.auth.getUser();
+  if(!user){openAccount('login');return;}
+  var {data:existing}=await sb.from('profiles').select('id').eq('account_id',user.id);
+  if(existing&&existing.length>=4){profileError.textContent='Maximum de 4 profils atteint.';return;}
+  var {data,error}=await sb.from('profiles').insert({account_id:user.id,pseudo:name,avatar:selectedAvatar}).select().single();
+  if(error){profileError.textContent=error.message;return;}
+  pseudo=data.pseudo;
+  applyProfile(pseudo,selectedAvatar);
+  try{
+    localStorage.setItem('noxstream_profile_created','1');
+    localStorage.setItem('noxstream_profile_pseudo',pseudo);
+    localStorage.setItem('noxstream_profile_avatar',selectedAvatar);
+    localStorage.setItem('noxstream_profile_id',data.id||'');
+  }catch(e){}
+  profileModal.classList.remove('is-open');
+  profileModal.setAttribute('aria-hidden','true');
+  connected=true;sessionKnown=true;
+  closeSplashAndOpenIndex();
+  setTimeout(function(){if(window.noxShowBlockPubAfterProfile)window.noxShowBlockPubAfterProfile();},700);
+});
+
+/* Barre de sortie de session dans l'index : elle n'est pas utilisée pour décider
+   si l'utilisateur peut entrer dans le site. La présentation est le vrai verrou. */
+var loggedOutBar=document.getElementById('noxLoggedOutBar');
+function hideLoggedOutBar(){if(loggedOutBar)loggedOutBar.hidden=true;}
+function showLoggedOutBar(){if(loggedOutBar)loggedOutBar.hidden=false;}
+
+/* Déconnexion : retour à la présentation et aucun retour automatique à l'index. */
+sb.auth.onAuthStateChange(function(event,session){
+  connected=!!session;
+  sessionKnown=true;
+  setPresentationButtons();
+
+  if(event==='SIGNED_OUT'||!session){
+    clearTimeout(splashTimer);
+    stayOnSplash();
+    return;
+  }
+
+  /* Connexion détectée alors que la présentation est affichée :
+     on laisse la logique de création/connexion ouvrir l'index après validation. */
+});
+
+window.noxSignOutProfile=async function(){
+  var result=await sb.auth.signOut();
+  if(result&&result.error)throw result.error;
+  /* Le listener SIGNED_OUT ramène à la présentation et y reste. */
+};
+
+setTimeout(function(){setupAdminPush();},300);
+})();
+</script>
+
+
+<footer class="nox-site-footer" aria-label="Informations NoxStream">
+  <div class="nox-footer-brand">N</div>
+  <div class="nox-footer-copy">
+    <div class="nox-footer-title">NoxStream <span>2026</span></div>
+    <div class="nox-footer-stats">Contenu du site&nbsp;: <strong>23 784 films</strong> · séries à venir · animés à venir</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var burger=document.getElementById('mobileMenu');
+  if(!burger)return;
+  burger.addEventListener('click',function(){
+    var drawer=document.querySelector('.site-global-drawer');
+    if(drawer){drawer.remove();return;}
+    drawer=document.createElement('div');
+    drawer.className='site-global-drawer';
+    drawer.innerHTML=`
+      <a class="menu-action" href="#list"><span class="menu-action-icon">♥</span><span>Ma liste</span></a>
+      <a class="menu-action" href="#profile"><span class="menu-action-icon">♟</span><span>Profil</span></a>
+      <div class="menu-genres-title">GENRES</div>
+      <div class="menu-genres">
+        <a class="menu-genre genre-action" href="/films.html?genre=Action"><span class="menu-genre-photo"></span><span>Action</span><b>›</b></a>
+        <a class="menu-genre genre-scifi" href="/films.html?genre=Science%20Fiction"><span class="menu-genre-photo"></span><span>Science Fiction</span><b>›</b></a>
+        <a class="menu-genre genre-thriller" href="/films.html?genre=Thriller"><span class="menu-genre-photo"></span><span>Thriller</span><b>›</b></a>
+        <a class="menu-genre genre-comedie" href="/films.html?genre=Comédie"><span class="menu-genre-photo"></span><span>Comédie</span><b>›</b></a>
+        <a class="menu-genre genre-drame" href="/films.html?genre=Drame"><span class="menu-genre-photo"></span><span>Drame</span><b>›</b></a>
+        <a class="menu-genre genre-horreur" href="/films.html?genre=Epouvante-horreur"><span class="menu-genre-photo"></span><span>Épouvante-horreur</span><b>›</b></a>
+      </div>`;
+    document.body.appendChild(drawer);
+  });
+})();
+</script>
+
+</body>
+</html>

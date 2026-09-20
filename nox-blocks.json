@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "rotation": "weekly",
+  "default_count": 10,
+  "blocks": [
+    {
+      "id": "sortie-cinema",
+      "title": "Sortie cinéma",
+      "keywords": [
+        "succès",
+        "populaire",
+        "récompense",
+        "oscar",
+        "palme",
+        "blockbuster",
+        "aventure",
+        "action",
+        "science-fiction",
+        "thriller",
+        "fantastique"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "blockbuster",
+      "title": "Blockbuster",
+      "keywords": [
+        "blockbuster",
+        "succès",
+        "populaire",
+        "aventure",
+        "action"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "livres",
+      "title": "Films d’action et d’aventure tirés de livres",
+      "keywords": [
+        "roman",
+        "livre",
+        "adaptation",
+        "écrivain",
+        "auteur"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "200-a-lheure",
+      "title": "Films à 200 à l’heure",
+      "keywords": [
+        "course",
+        "voiture",
+        "moto",
+        "poursuite",
+        "pilote",
+        "rallye",
+        "vitesse",
+        "circuit",
+        "course-poursuite"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "grands-succes",
+      "title": "Grands succès",
+      "keywords": [
+        "succès",
+        "populaire",
+        "prix",
+        "récompense",
+        "oscar",
+        "palme"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "blockbuster-sf",
+      "title": "Blockbuster SF",
+      "keywords": [
+        "science-fiction",
+        "science fiction",
+        "futur",
+        "espace",
+        "extraterrestre",
+        "robot",
+        "technologie"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "crime",
+      "title": "Quand le crime a fière allure",
+      "keywords": [
+        "crime",
+        "criminel",
+        "mafia",
+        "gang",
+        "police",
+        "meurtre",
+        "braquage",
+        "tueur"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "horreur",
+      "title": "La semaine de l’horreur",
+      "keywords": [
+        "horreur",
+        "terreur",
+        "fantôme",
+        "démon",
+        "vampire",
+        "zombie",
+        "monstre"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "action-spectaculaire",
+      "title": "Blockbuster action spectaculaire",
+      "keywords": [
+        "explosion",
+        "combat",
+        "poursuite",
+        "mission",
+        "guerre",
+        "héros",
+        "agent"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "fantastique-ironique",
+      "title": "Film fantastique ironique",
+      "keywords": [
+        "fantastique",
+        "magie",
+        "créature",
+        "sorcier",
+        "humour",
+        "comédie",
+        "drôle"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "thriller-ironique",
+      "title": "Thriller avec soupçon ironique",
+      "keywords": [
+        "thriller",
+        "enquête",
+        "mystère",
+        "tueur",
+        "humour",
+        "comédie",
+        "ironie"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "futur-dystopique",
+      "title": "Futur dystopique",
+      "keywords": [
+        "dystopie",
+        "dystopique",
+        "totalitaire",
+        "surveillance",
+        "post-apocalyptique",
+        "apocalypse",
+        "futur"
+      ],
+      "enabled": true,
+      "count": 10
+    },
+    {
+      "id": "parce-que-vous-avez-aime",
+      "title": "Parce que vous avez aimé",
+      "keywords": [],
+      "enabled": true,
+      "count": 10
+    }
+  ]
+}

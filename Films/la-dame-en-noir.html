@@ -1,0 +1,120 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>La Dame en Noir — NoxStream</title><link rel="stylesheet" href="../style.css"><style>
+/* Fiche film — disposition affiche + informations comme le modèle validé */
+.nox-film-wrap{min-height:100vh;padding:34px 20px 90px;display:flex;justify-content:center}
+.standalone-detail{position:relative;width:min(1000px,92vw);min-height:570px;border-radius:25px;overflow:hidden;background:#111419;border:1px solid #303640;box-shadow:0 30px 100px #000;margin:35px auto 0;padding:36px 38px 45px}
+.standalone-detail::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 22%,#77552d55,transparent 40%);pointer-events:none}
+.detail-top{position:relative;z-index:2;display:grid;grid-template-columns:260px minmax(0,1fr);gap:32px;align-items:start}
+.detail-art{position:relative;width:260px;height:390px;overflow:hidden;border-radius:20px;display:flex;align-items:center;justify-content:center}
+.detail-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;border-radius:19px}
+.detail-copy{position:relative;z-index:2;min-width:0;padding:8px 0 0}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#c9a75e}
+.detail-copy h1{font:500 48px Georgia,serif;margin:16px 0 18px;line-height:1.08}
+.meta{font-size:15px;color:#b0b5bc;line-height:1.6}
+.detail-copy p{color:#9da3aa;line-height:1.7;font-size:16px;margin:18px 0 0}
+.actions{display:flex;gap:10px;margin-top:22px}
+.primary,.secondary,.round{height:42px;border-radius:12px;padding:0 17px;font-weight:600;cursor:pointer;white-space:nowrap}
+.primary{background:#f1d28c;color:#17130a;border:0}.secondary{background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.round{width:46px;padding:0;background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.is-active{border-color:#e8c778!important;color:#f1d28c!important}
+.close-link{position:absolute;right:20px;top:18px;z-index:6;width:40px;height:40px;border:0;border-radius:50%;background:#ffffff12;color:#fff;font-size:24px;cursor:pointer}
+.detail-player{position:relative;z-index:2;margin-top:28px;border:1px solid #292f36;border-radius:18px;overflow:hidden;background:#080a0d;box-shadow:0 12px 35px #0005}
+.detail-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #20252b;background:#111419}.detail-player-head span{font-size:10px;letter-spacing:3px;color:#d0b16c}.detail-player-head small{font-size:11px;color:#737b84}
+.detail-player-screen{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(circle at center,#252a30,#080a0d 70%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detail-player-placeholder{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;font:inherit}.detail-player-placeholder[hidden]{display:none!important}
+.detail-player-play{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#f1d28c;color:#17130a;font-size:22px}.detail-player-placeholder span:last-child{font-size:13px;color:#d5d8dc}
+.detail-trailer-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}.detail-trailer-frame[hidden]{display:none!important}
+.detail-player-links{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;margin-top:18px}.player-version h2{margin:0 0 9px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff}.player-version-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.player-link-btn{min-height:38px;border:1px solid #343a42;background:#15181d;color:#fff;border-radius:11px;padding:0 13px;font-size:12px;font-weight:600;cursor:pointer}.player-link-btn:hover{background:#20252c;border-color:#e0c276;color:#f1d28c}.player-empty{display:block;min-height:1px}
+.back{display:block;max-width:1000px;width:min(1000px,92vw);margin:0 auto -5px;color:#e8c778;text-decoration:none;font-size:15px}
+@media(max-width:700px){
+ body.nox-film-page{background:#07090c}
+ .nox-film-wrap{padding:0 0 80px}
+ .back{width:auto;margin:20px 20px 0;font-size:14px}
+ .standalone-detail{width:94vw;min-height:0;margin:25px auto 0;border-radius:25px;padding:26px 18px 38px}
+ .detail-top{display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;align-items:start}
+ .detail-art{width:180px;height:270px;border-radius:18px;box-shadow:0 12px 30px #0008}
+ .detail-art img{border-radius:15px}
+ .detail-copy{padding:2px 0 0}
+ .eyebrow{font-size:9px;letter-spacing:2.5px}
+ .detail-copy h1{font-size:28px;line-height:1.08;margin:8px 0 12px}
+ .meta{font-size:12px;line-height:1.5}
+ .detail-copy p{font-size:13px;line-height:1.55;margin-top:12px}
+ .actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:8px;width:100%;margin-top:2px}
+ .primary,.secondary{height:40px;min-width:0;width:100%;padding:0 7px;font-size:12px}
+ .round{width:42px;height:40px;min-width:42px;font-size:18px}
+ .detail-player{grid-column:1/-1;margin-top:22px;border-radius:16px}
+ .detail-player-head{padding:10px 12px}
+ .detail-player-play{width:52px;height:52px;font-size:20px}
+ .detail-player-links{gap:16px}
+ .player-version-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .player-link-btn{min-height:36px;font-size:11px;padding:0 7px}
+ .close-link{right:12px;top:12px;width:40px;height:40px}
+}
+@media(max-width:390px){
+ .detail-top{grid-template-columns:120px minmax(0,1fr);gap:14px}
+ .detail-art{width:120px;height:180px}
+ .detail-copy h1{font-size:24px}
+ .meta{font-size:11px}
+ .detail-copy p{font-size:12px}
+}
+
+/* === FICHE FILM — disposition de référence fournie par l'utilisateur === */
+.nox-film-wrap{min-height:100vh;padding:34px 20px 90px;display:flex;justify-content:center}
+.standalone-detail{position:relative;width:min(1000px,92vw);min-height:0;border-radius:25px;overflow:hidden;background:#111419;border:1px solid #303640;box-shadow:0 30px 100px #000;margin:35px auto 0;padding:36px 38px 45px}
+.standalone-detail::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 22%,#77552d55,transparent 40%);pointer-events:none}
+.detail-top{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);gap:32px;align-items:start}
+.detail-art{position:relative;width:100%;height:auto;aspect-ratio:2/3;overflow:hidden;border-radius:22px;display:block;background:transparent!important;padding:0!important;border:0!important;box-shadow:none!important;clip-path:none!important}
+.detail-art .detail-poster{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover;object-position:center;border-radius:22px;border:0!important;box-shadow:none!important}
+.detail-copy{position:relative;z-index:2;min-width:0;padding:8px 0 0}
+.detail-copy h1{font:500 48px Georgia,serif;margin:16px 0 18px;line-height:1.08}
+.meta{font-size:15px;color:#b0b5bc;line-height:1.6}
+.detail-copy p{color:#9da3aa;line-height:1.7;font-size:16px;margin:18px 0 0}
+.synopsis-collapsed{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.synopsis-expanded{display:block}
+.synopsis-more{display:inline-flex;align-items:center;gap:8px;margin-top:10px;border:1px solid #ffffff18;background:#ffffff0d;color:#f1d28c;border-radius:12px;padding:9px 17px;font-size:13px;font-weight:600;cursor:pointer}
+.actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 46px;gap:10px;margin-top:22px;width:100%}
+.primary,.secondary,.round{height:42px;border-radius:12px;padding:0 13px;font-weight:600;cursor:pointer;white-space:nowrap;min-width:0}
+.primary{background:#f1d28c;color:#17130a;border:0}.secondary{background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.round{width:46px;padding:0;background:#ffffff0d;color:#fff;border:1px solid #ffffff18}
+.detail-player{position:relative;z-index:2;margin-top:28px;border:1px solid #292f36;border-radius:18px;overflow:hidden;background:#080a0d;box-shadow:0 12px 35px #0005}
+.detail-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #20252b;background:#111419}
+.detail-player-head span{font-size:10px;letter-spacing:3px;color:#d0b16c}.detail-player-head small{font-size:11px;color:#737b84}
+.detail-player-screen{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(circle at center,#252a30,#080a0d 70%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detail-player-placeholder{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;font:inherit}.detail-player-placeholder[hidden]{display:none!important}
+.detail-player-play{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#f1d28c;color:#17130a;font-size:22px}
+.detail-player-placeholder span:last-child{font-size:13px;color:#d5d8dc}
+.detail-trailer-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}.detail-trailer-frame[hidden]{display:none!important}
+.detail-player-links{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;margin-top:18px}.player-version h2{margin:0 0 9px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff}.player-version-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.player-link-btn{min-height:38px;border:1px solid #343a42;background:#15181d;color:#fff;border-radius:11px;padding:0 13px;font-size:12px;font-weight:600;cursor:pointer}
+.back{display:block;max-width:1000px;width:min(1000px,92vw);margin:0 auto -5px;color:#e8c778;text-decoration:none;font-size:15px}
+@media(max-width:700px){
+ .nox-film-wrap{padding:0 0 80px}
+ .back{width:auto;margin:20px 20px 0;font-size:14px}
+ .standalone-detail{width:92vw;min-height:0;margin:25px auto 0;border-radius:25px;padding:24px 18px 38px}
+ .detail-top{grid-template-columns:minmax(0,38%) minmax(0,1fr);gap:16px;align-items:start}
+ .detail-art{width:100%;height:auto;aspect-ratio:2/3;border-radius:18px;margin:0}
+ .detail-art .detail-poster{width:100%!important;height:100%!important;object-fit:cover;border-radius:18px}
+ .detail-copy{padding:2px 0 0}
+ .eyebrow{font-size:9px;letter-spacing:2.5px}
+ .detail-copy h1{font-size:29px;line-height:1.08;margin:7px 0 12px}
+ .meta{font-size:12px;line-height:1.5}
+ .detail-copy p{font-size:13px;line-height:1.55;margin-top:12px}
+ .synopsis-more{font-size:12px;padding:7px 13px;margin-top:8px}
+ .actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:7px;width:100%;margin-top:14px}
+ .primary,.secondary{height:40px;width:100%;padding:0 5px;font-size:11px}
+ .round{width:42px;height:40px;min-width:42px;font-size:18px}
+ .detail-player{grid-column:1/-1;margin-top:24px;border-radius:16px}
+ .detail-player-head{padding:10px 12px}
+ .detail-player-play{width:52px;height:52px;font-size:20px}
+ .detail-player-links{gap:16px}
+ .player-version-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .player-link-btn{min-height:36px;font-size:11px;padding:0 7px}
+ .close-link{right:12px;top:12px;width:40px;height:40px}
+}
+@media(max-width:390px){
+ .standalone-detail{width:94vw;padding-left:14px;padding-right:14px}
+ .detail-top{grid-template-columns:minmax(0,37%) minmax(0,1fr);gap:12px}
+ .detail-copy h1{font-size:23px}
+ .meta{font-size:11px}
+ .detail-copy p{font-size:12px}
+ .actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px}
+ .round{width:40px;min-width:40px}
+}
+</style></head><body class="nox-film-page" data-film="La Dame en Noir" data-film-id="la-dame-en-noir">
+<script src="/site-header.js"></script>
+<a class="back" href="../index.html">← Retour à l'accueil</a><div class="nox-film-wrap"><section class="standalone-detail" aria-label="Fiche film"><button class="close-link" id="backButton" aria-label="Fermer">×</button><div class="detail-top"><div class="detail-art"><img class="detail-poster" data-film-poster alt="2:22"></div><div class="detail-copy"><div class="eyebrow">FICHE FILM</div><h1 id="filmTitle">La Dame en Noir</h1><div class="meta" id="filmMeta">2017  •  1h39min  •  HD Light  •  TrueFrench  •  Film Ancien , Action , Romance , Thriller</div><p id="filmSynopsis">Après avoir évité de justesse un crash aérien à 2h22, Dylan, un contrôleur aérien à la vie jusqu&#x27;alors bien réglée, voit son quotidien perturbé par une série de coïncidences étranges qui le conduisent inéluctablement au hall de la gare de Grand Central, à 2h22. Dylan est persuadé que son destin et celui de Sarah ? une jeune femme dont il vient de tomber amoureux ? sont liés, et que ces événements répétés sont en fait des signes prémonitoires. A eux de percer le mystère du temps.</p></div><div class="actions"><button class="primary" id="trailerButton">▶ Bande Annonce</button><button class="secondary" id="listButton">＋ Ma liste</button><button class="round" id="favButton">♡</button></div></div><div class="detail-player" id="detailPlayer"><div class="detail-player-head"><span>LECTEUR</span><small id="standalonePlayerStatus">Prêt à lancer</small></div><div class="detail-player-screen"><button class="detail-player-placeholder" id="standalonePlayerPlaceholder" type="button"><span class="detail-player-play">▶</span><span>Ouvrir le lecteur</span></button><iframe id="standalonePlayerFrame" class="detail-trailer-frame" hidden title="Lecteur vidéo" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div></div><div class="detail-player-links" id="standalonePlayerLinks" aria-label="Choisir un lecteur"></div></section></div><script>window.NOX_FILM_DATA={"title":"La Dame en Noir","image":"https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/La_Dame_en_Noir.jpg","trailer":"https://www.youtube.com/watch?v=TrMrSyAQR6Q","readers":{"version_francaise":[{"name":"Voe","url":"https://rebeccapracticeloss.com/e/akpifspxnx0b"},{"name":"LuLuTV","url":"https://luluvdo.com/e/vkpdgl1sffpi"},{"name":"FMX","url":"https://flemmix.upns.pro/#mhpn6b"},{"name":"DdStream","url":"https://playmogo.com/e/df4i1y5ejvni"},{"name":"Save","url":"https://savefiles.com/e/zwupryj1z3kh"},{"name":"uqload","url":"https://uqload.vc/embed-tztambti8r4g.html"},{"name":"Vmoly","url":"https://vidmoly.org/embed-81duct12ho72.html"},{"name":"Filelions","url":"https://morencius.com/v/a90dn478u8y2"},{"name":"Swish","url":"https://hanerix.com/e/w01ibptl3x47"},{"name":"netu","url":"https://waaw1.tv/e/tdReMkrTmmj9"}],"version_originale":[]},"year":"2012","genre":"Film Ancien , Drame , Epouvante-horreur , Thriller","duration":"1 h 35 mn","quality":"HD Light","version":"TrueFrench","origin":"Canada, United Kingdom, Suède","director":"James Watkins","actors":"Daniel Radcliffe , Ciarán Hinds , Janet McTeer","synopsis":"Arthur Kipps, jeune notaire à Londres, est obligé de se rendre dans le petit village perdu de Crythin Gifford pour régler la succession d’une cliente récemment décédée. Dans l’impressionnant manoir de la défunte, il ne va pas tarder à découvrir d’étranges signes qui semblent renvoyer à de très sombres secrets. Face au passé enfoui des villageois, face à la mystérieuse femme en noir qui hante les lieux et s’approche chaque jour davantage, Arthur va basculer dans le plus épouvantable des cauchemars…"};</script><script src="../film-page.js"></script></body></html>

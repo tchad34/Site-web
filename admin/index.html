@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoxStream — Administration</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#090909;color:#eee;font-family:Arial,sans-serif}
+header{padding:22px 28px;border-bottom:1px solid #292929;display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:24px} .muted{color:#999} main{max-width:1100px;margin:28px auto;padding:0 18px}
+.card{background:#121212;border:1px solid #292929;border-radius:16px;padding:20px;margin-bottom:18px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#0c0c0c;color:#fff;margin:7px 0 12px}
+button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;background:#eee;color:#111;font-weight:700;margin:4px}
+button.danger{background:#b22;color:#fff} button.ok{background:#287a42;color:#fff}
+.hidden{display:none} .success{color:#69d38a}.error{color:#ff7373}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.form-grid .full{grid-column:1/-1}.avatar-choice{display:flex;align-items:center;gap:10px}.avatar-preview{width:44px;height:44px;border-radius:50%;border:1px solid #444;background:#111;object-fit:cover}@media(max-width:700px){.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}} .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse} th,td{padding:12px 8px;border-bottom:1px solid #292929;text-align:left;vertical-align:middle}
+.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#222} .badge{padding:5px 9px;border-radius:999px;background:#242424;font-size:12px}
+.blocked{color:#ff7373} .active{color:#69d38a}
+#message{margin-top:10px;color:#bbb}
+@media(max-width:700px){table{font-size:13px} th:nth-child(1),td:nth-child(1){display:none}}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.modal-close{background:#292929;color:#fff}.modal-account{font-size:13px;color:#aaa;margin-bottom:14px;word-break:break-all}
+
+.featured-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.featured-item{border:1px solid #333;border-radius:12px;padding:10px;background:#111}.featured-item img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;background:#222}.featured-item strong{display:block;margin:8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.featured-actions{display:flex;gap:8px}.featured-current{display:flex;align-items:center;gap:12px;border:1px solid #333;border-radius:12px;padding:10px}.featured-current img{width:70px;height:100px;object-fit:cover;border-radius:8px}
+</style>
+</head>
+<body>
+<script src="/site-header.js"></script>
+
+<header><div><h1>NoxStream — Administration</h1><div class="muted">Espace externe de gestion des profils</div></div><button id="logout" class="hidden">Déconnexion</button></header>
+<main>
+<section id="login" class="card">
+<h2>Accès administrateur</h2>
+<label>Email</label><input id="email" type="email" autocomplete="username">
+<label>Mot de passe</label><input id="password" type="password" autocomplete="current-password">
+<button id="loginBtn">Se connecter</button>
+<div id="message"></div>
+</section>
+
+<section id="dashboard" class="hidden">
+<div class="card row">
+<div><strong>Profils</strong><div class="muted">Gestion des comptes et des profils</div></div>
+<button id="refresh">Actualiser</button><button id="notifyBtn">🔔 Activer les notifications</button>
+</div>
+<div class="card">
+<h2>Créer un compte utilisateur</h2>
+<div class="muted">Crée directement le compte, puis son premier profil. Il n'est plus nécessaire de créer le compte ailleurs avant de venir ici.</div>
+<div class="form-grid">
+<div><label>E-mail</label><input id="createAccountEmail" type="email" autocomplete="off" placeholder="utilisateur@exemple.com"></div>
+<div><label>Mot de passe</label><input id="createAccountPassword" type="password" autocomplete="new-password" placeholder="8 caractères minimum"></div>
+<div><label>Pseudo</label><input id="createAccountPseudo" type="text" maxlength="40" autocomplete="off" placeholder="Pseudo"></div>
+<div><label>Avatar</label><div class="avatar-choice"><img id="createAccountAvatarPreview" class="avatar-preview" src="/avatars/avatar-noxstream.svg"><select id="createAccountAvatar" style="flex:1;width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#0c0c0c;color:#fff;margin:7px 0 12px"><option value="/avatars/avatar-noxstream.svg">NoxStream — logo N</option><option value="/avatars/avatar-01.svg">Avatar 1</option><option value="/avatars/avatar-02.svg">Avatar 2</option><option value="/avatars/avatar-03.svg">Avatar 3</option><option value="/avatars/avatar-04.svg">Avatar 4</option><option value="/avatars/avatar-05.svg">Avatar 5</option><option value="/avatars/avatar-06.svg">Avatar 6</option><option value="/avatars/avatar-07.svg">Avatar 7</option><option value="/avatars/avatar-08.svg">Avatar 8</option></select></div></div>
+<div class="full"><button id="createAccountBtn" class="ok">Créer le compte</button><div id="createAccountMessage" class="muted"></div></div>
+</div>
+</div>
+<div class="card">
+<h2>Gestion des administrateurs</h2>
+<div class="muted">Donne ou retire les droits administrateur à un compte utilisateur existant, directement depuis ce panneau.</div>
+<label>E-mail du compte</label><input id="adminAccountEmail" type="email" autocomplete="off" placeholder="utilisateur@exemple.com">
+<div class="row">
+<button id="grantAdminBtn" class="ok">Donner les droits admin</button>
+<button id="revokeAdminBtn" class="danger">Retirer les droits admin</button>
+</div>
+<div id="adminAccountMessage" class="muted"></div>
+<div id="adminList" class="muted" style="margin-top:12px"></div>
+</div>
+<div class="card">
+<h2>Créer un profil sur un compte existant</h2>
+<div class="muted">Utilise cette partie uniquement si le compte existe déjà.</div>
+<label>E-mail du compte</label><input id="createEmail" type="email" autocomplete="off" placeholder="utilisateur@exemple.com">
+<label>Pseudo</label><input id="createPseudo" type="text" maxlength="40" autocomplete="off" placeholder="Pseudo">
+<label>Avatar</label><select id="createAvatar" style="width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#0c0c0c;color:#fff;margin:7px 0 12px">
+<option value="/avatars/avatar-noxstream.svg">NoxStream — logo N</option><option value="/avatars/avatar-01.svg">Avatar 1</option><option value="/avatars/avatar-02.svg">Avatar 2</option><option value="/avatars/avatar-03.svg">Avatar 3</option><option value="/avatars/avatar-04.svg">Avatar 4</option><option value="/avatars/avatar-05.svg">Avatar 5</option><option value="/avatars/avatar-06.svg">Avatar 6</option><option value="/avatars/avatar-07.svg">Avatar 7</option><option value="/avatars/avatar-08.svg">Avatar 8</option>
+</select>
+<button id="createProfileBtn" class="ok">Créer le profil</button><div id="createMessage" class="muted"></div>
+</div>
+<div class="card" id="featuredManager">
+<h2>À la une</h2>
+<div class="muted">Recherchez un film, affichez son aperçu, puis ajoutez-le à la sélection « À LA UNE ».</div>
+<div class="form-grid" style="margin-top:12px">
+  <div class="full"><label>Rechercher un film</label><input id="featuredSearch" type="search" autocomplete="off" placeholder="Titre du film..."></div>
+</div>
+<div id="featuredSearchResults" class="muted" style="margin-top:12px"></div>
+<div id="featuredCurrent" style="margin-top:14px"></div>
+<div id="featuredMessage" class="muted" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<table>
+<thead><tr><th>Compte</th><th>Profil</th><th>Avatar</th><th>Profils du compte</th><th>État</th><th>Action</th></tr></thead>
+<tbody id="profiles"></tbody>
+</table>
+<div id="empty" class="muted hidden">Aucun profil.</div>
+</div>
+</section>
+<section id="editAccountPanel" class="card hidden" aria-labelledby="editAccountTitle">
+  <div class="row" style="justify-content:space-between">
+    <div><h2 id="editAccountTitle" style="margin:0">Éditer le compte</h2><div id="editAccountCurrent" class="modal-account">Chargement…</div></div>
+    <button type="button" id="editAccountX" class="modal-close">✕ Fermer</button>
+  </div>
+  <div class="form-grid" style="margin-top:14px">
+    <div class="full"><label>Nouvelle adresse e-mail</label><input id="editAccountEmail" type="email" autocomplete="off" placeholder="Laisser vide pour conserver l’adresse actuelle"></div>
+    <div class="full"><label>Nouveau mot de passe</label><input id="editAccountPassword" type="password" autocomplete="new-password" placeholder="Laisser vide pour conserver le mot de passe"></div>
+    <div class="full"><label>Avatar du profil</label><div class="avatar-choice"><img id="editProfileAvatarPreview" class="avatar-preview" src="/avatars/avatar-noxstream.svg" alt="Avatar du profil"><select id="editProfileAvatar" style="flex:1;width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#0c0c0c;color:#fff;margin:7px 0 12px">
+      <option value="/avatars/avatar-noxstream.svg">NoxStream — logo N</option>
+      <option value="/avatars/avatar-01.svg">Avatar 1</option><option value="/avatars/avatar-02.svg">Avatar 2</option><option value="/avatars/avatar-03.svg">Avatar 3</option><option value="/avatars/avatar-04.svg">Avatar 4</option>
+      <option value="/avatars/avatar-05.svg">Avatar 5</option><option value="/avatars/avatar-06.svg">Avatar 6</option><option value="/avatars/avatar-07.svg">Avatar 7</option><option value="/avatars/avatar-08.svg">Avatar 8</option>
+    </select></div></div>
+  </div>
+  <div id="editAccountMessage" class="muted"></div>
+  <div class="modal-actions"><button type="button" id="editAccountCancel" class="modal-close">Annuler</button><button type="button" id="editAccountSave" class="ok">Enregistrer</button></div>
+</section>
+</main>
+<script>
+const cfg = {"supabaseUrl": "https://mvwtxamnwtnhzuyeaszp.supabase.co", "supabaseKey": "sb_publishable_s3hMkVzCD-0syFvft2hH6Q_bNnXj6V5"};
+const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+const $ = id => document.getElementById(id);
+function msg(t) { $('message').textContent=t; }
+
+async function isAdmin() {
+  const {data,error} = await sb.rpc('is_noxstream_admin');
+  return !error && data === true;
+}
+
+async function loadProfiles() {
+  const {data,error} = await sb.from('admin_profile_overview').select('*').order('account_id').order('created_at');
+  if(error) { alert(error.message); return; }
+  const body = $('profiles'); body.innerHTML='';
+  $('empty').classList.toggle('hidden', !data.length);
+  for(const p of data) {
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="badge">${p.account_id}</span></td>
+      <td><strong>${escapeHtml(p.pseudo)}</strong></td>
+      <td><img class="avatar" src="${escapeAttr(p.avatar)}" onerror="this.style.visibility='hidden'"></td>
+      <td>${p.profile_count} / 4</td>
+      <td class="${p.is_blocked?'blocked':'active'}">${p.is_blocked?'Bloqué':'Actif'}</td>
+      <td><button class="${p.is_blocked?'ok':'danger'}" data-id="${p.profile_id}" data-block="${!p.is_blocked}">
+        ${p.is_blocked?'Débloquer':'Bloquer'}</button>
+        <button class="danger" data-delete-account="${p.account_id}" data-email="${escapeAttr(p.account_id)}">Supprimer le compte</button>
+        <button data-edit-account="${p.account_id}" data-profile-id="${p.profile_id}">Éditer le compte</button></td>`;
+    body.appendChild(tr);
+  }
+  body.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{
+    b.disabled=true;
+    const {error}=await sb.rpc('admin_block_profile',{profile_id:b.dataset.id,blocked:b.dataset.block==='true'});
+    b.disabled=false;
+    if(error) alert(error.message); else loadProfiles();
+  });
+  body.querySelectorAll('button[data-delete-account]').forEach(b=>b.onclick=async()=>{
+    const accountId=b.dataset.deleteAccount;
+    if(!accountId) return;
+    if(!confirm('Supprimer définitivement ce compte et tous ses profils ? Cette action est irréversible.')) return;
+    b.disabled=true;
+    try {
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session) throw new Error('Session administrateur absente');
+      const r=await fetch(cfg.supabaseUrl+'/functions/v1/admin-delete-account-v2',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({account_id:accountId})});
+      const out=await r.json().catch(()=>({}));
+      if(!r.ok || !out.ok) throw new Error(out.error||('Erreur serveur ('+r.status+') lors de la suppression'));
+      if(out.deleted_self){
+        await sb.auth.signOut();
+        $('dashboard').classList.add('hidden');
+        $('login').classList.remove('hidden');
+        $('logout').classList.add('hidden');
+        msg('Compte administrateur supprimé. Vous pouvez vous reconnecter avec un autre compte administrateur.');
+        return;
+      }
+      await loadProfiles();
+    } catch(e) { alert(e.message); b.disabled=false; }
+  });
+  body.querySelectorAll('button[data-edit-account]').forEach(b=>b.onclick=()=>openEditAccount(b.dataset.editAccount,b.dataset.profileId));
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s){return escapeHtml(s).replace(/`/g,'&#96;');}
+
+async function enter() {
+  const {data:{user},error} = await sb.auth.getUser();
+  if(error || !user) return;
+  if(!(await isAdmin())) { await sb.auth.signOut(); msg("Ce compte n'est pas autorisé à accéder à l'administration."); return; }
+  $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('logout').classList.remove('hidden');
+  loadProfiles();
+  loadAdmins();
+  loadFeaturedAdmin();
+}
+$('loginBtn').onclick=async()=>{
+  msg('Connexion…');
+  const {error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});
+  if(error) { msg(error.message); return; } await enter();
+};
+$('logout').onclick=async()=>{await sb.auth.signOut();location.reload();};
+$('refresh').onclick=loadProfiles;
+async function loadAdmins(){
+  const {data,error}=await sb.rpc('admin_list_admins');
+  if(error){$('adminList').textContent='Impossible de charger les administrateurs : '+error.message;return;}
+  $('adminList').innerHTML=data.length?'<strong>Administrateurs actuels :</strong><br>'+data.map(a=>escapeHtml(a.email||a.user_id)).join('<br>'):'Aucun administrateur trouvé.';
+}
+async function setAdmin(makeAdmin){
+  const email=$('adminAccountEmail').value.trim();
+  const outBox=$('adminAccountMessage');
+  if(!email){outBox.textContent='Adresse e-mail obligatoire.';outBox.className='error';return;}
+  const btn=makeAdmin?$('grantAdminBtn'):$('revokeAdminBtn');
+  btn.disabled=true; outBox.textContent=makeAdmin?'Attribution des droits…':'Retrait des droits…'; outBox.className='muted';
+  try{
+    const {data,error}=await sb.rpc('admin_set_admin',{account_email:email,make_admin:makeAdmin});
+    if(error) throw new Error(error.message);
+    if(!data || !data.ok) throw new Error('Opération non confirmée.');
+    outBox.textContent=makeAdmin?'Droits administrateur accordés à '+email+'.':'Droits administrateur retirés pour '+email+'.';
+    outBox.className='success';
+    await loadAdmins();
+  }catch(e){outBox.textContent=e.message;outBox.className='error';}
+  btn.disabled=false;
+}
+$('grantAdminBtn').onclick=()=>setAdmin(true);
+$('revokeAdminBtn').onclick=()=>setAdmin(false);
+$('createAccountAvatar').onchange=()=>{$('createAccountAvatarPreview').src=$('createAccountAvatar').value};
+$('createAccountBtn').onclick=async()=>{
+  const email=$('createAccountEmail').value.trim(), password=$('createAccountPassword').value, pseudo=$('createAccountPseudo').value.trim(), avatar=$('createAccountAvatar').value;
+  $('createAccountMessage').textContent='Création du compte…'; $('createAccountBtn').disabled=true;
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session) throw new Error('Session administrateur absente');
+    const r=await fetch(cfg.supabaseUrl+'/functions/v1/admin-create-account',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({email,password,pseudo,avatar})});
+    const out=await r.json();
+    if(!r.ok || !out.ok) throw new Error(out.error||('Erreur serveur ('+r.status+') lors de la création du compte'));
+    $('createAccountMessage').textContent='Compte et premier profil créés avec succès.'; $('createAccountMessage').className='success';
+    $('createAccountEmail').value=''; $('createAccountPassword').value=''; $('createAccountPseudo').value=''; await loadProfiles();
+  } catch(e) { $('createAccountMessage').textContent=e.message; $('createAccountMessage').className='error'; }
+  $('createAccountBtn').disabled=false;
+};
+$('createProfileBtn').onclick=async()=>{
+  const email=$('createEmail').value.trim(), pseudo=$('createPseudo').value.trim(), avatar=$('createAvatar').value;
+  $('createMessage').textContent='Création…'; $('createProfileBtn').disabled=true;
+  const {error}=await sb.rpc('admin_create_profile',{account_email:email,profile_pseudo:pseudo,profile_avatar:avatar});
+  $('createProfileBtn').disabled=false;
+  if(error){ $('createMessage').textContent=error.message; return; }
+  $('createMessage').textContent='Profil créé avec succès.';
+  $('createPseudo').value=''; await loadProfiles();
+};
+let editingAccountId='', editingProfileId='';
+function closeEditAccount(){
+  editingAccountId=''; editingProfileId='';
+  const modal=$('editAccountPanel');
+  if(modal){ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+}
+window.noxCloseEditAccount=closeEditAccount;
+async function openEditAccount(accountId,profileId){
+  editingProfileId=profileId||'';
+  editingAccountId=accountId||'';
+  const modal=$('editAccountPanel');
+  if(!editingAccountId||!modal)return;
+  modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='';
+  $('editAccountCurrent').textContent='Chargement du compte…';
+  $('editAccountEmail').value='';
+  $('editAccountPassword').value='';
+  $('editProfileAvatar').value='/avatars/avatar-noxstream.svg';
+  $('editProfileAvatarPreview').src='/avatars/avatar-noxstream.svg';
+  $('editAccountMessage').textContent=''; $('editAccountMessage').className='muted';
+  $('editAccountSave').disabled=false;
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session) throw new Error('Session administrateur absente');
+    const r=await fetch(cfg.supabaseUrl+'/functions/v1/admin-edit-account',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({account_id:accountId,profile_id:profileId||null,mode:'get'})});
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok || !out.ok) throw new Error(out.error||('Erreur serveur ('+r.status+')'));
+    $('editAccountCurrent').textContent='Compte actuel : '+(out.user.email||accountId);
+    $('editAccountEmail').value=out.user.email||'';
+    if(out.profile && out.profile.avatar){
+      $('editProfileAvatar').value=out.profile.avatar;
+      $('editProfileAvatarPreview').src=out.profile.avatar;
+    }
+    $('editAccountSave').disabled=false;
+  }catch(e){
+    $('editAccountCurrent').textContent='Impossible de charger le compte.';
+    $('editAccountMessage').textContent=e.message;
+    $('editAccountMessage').className='error';
+    $('editAccountSave').disabled=false;
+  }
+}
+async function saveEditAccount(){
+  if(!editingAccountId)return;
+  const email=$('editAccountEmail').value.trim();
+  const password=$('editAccountPassword').value;
+  const avatar=$('editProfileAvatar').value;
+  const box=$('editAccountMessage');
+  if(!email && !password && !avatar){box.textContent='Aucune modification indiquée.';box.className='error';return;}
+  if(password && password.length<8){box.textContent='Le mot de passe doit contenir au moins 8 caractères.';box.className='error';return;}
+  const btn=$('editAccountSave'); btn.disabled=true; box.textContent='Enregistrement…'; box.className='muted';
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session) throw new Error('Session administrateur absente');
+    const r=await fetch(cfg.supabaseUrl+'/functions/v1/admin-edit-account',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({account_id:editingAccountId,profile_id:editingProfileId||null,mode:'update',email,password,avatar})});
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok || !out.ok) throw new Error(out.error||('Erreur serveur ('+r.status+') lors de la modification'));
+    box.textContent='Compte modifié avec succès.'; box.className='success';
+    $('editAccountPassword').value='';
+    $('editAccountCurrent').textContent='Compte actuel : '+(out.user.email||editingAccountId);
+    $('editAccountEmail').value=out.user.email||'';
+    await loadProfiles();
+    setTimeout(closeEditAccount,700);
+  }catch(e){box.textContent=e.message;box.className='error';}
+  btn.disabled=false;
+}
+$('editProfileAvatar').addEventListener('change',function(){ $('editProfileAvatarPreview').src=this.value; });
+$('editAccountCancel').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); closeEditAccount(); });
+$('editAccountX').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); closeEditAccount(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeEditAccount(); });
+$('editAccountSave').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); saveEditAccount(); });
+$('editAccountPanel').addEventListener('click',function(e){ if(e.target===$('editAccountPanel')) closeEditAccount(); });
+// V62 : édition affichée comme panneau normal, sans fenêtre modale ni calque bloquant.
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeEditAccount(); });
+const VAPID_PUBLIC_KEY='BAYk03jJJdqlDq-KgOhJauwx-6V9KxQMOaZgjgGuNPb5EM_wl-B09DOHp6-Bt8LBj3nd3s5150QYmiBitR0d6yA';
+function b64ToUint8Array(base64){const padding='='.repeat((4-base64.length%4)%4);const raw=atob((base64+padding).replace(/-/g,'+').replace(/_/g,'/'));const out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
+async function activatePushNotifications(){
+  const btn=$('notifyBtn');
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){throw new Error('Les notifications push ne sont pas disponibles sur ce navigateur.');}
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)throw new Error('Session administrateur absente.');
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted')throw new Error('Autorisation des notifications refusée.');
+  const reg=await navigator.serviceWorker.register('/sw.js',{scope:'/'});
+  await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToUint8Array(VAPID_PUBLIC_KEY)});
+  const r=await fetch(cfg.supabaseUrl+'/functions/v1/admin-push-subscribe',{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON()})});
+  const out=await r.json().catch(()=>({}));
+  if(!r.ok||!out.ok)throw new Error(out.error||('Erreur serveur ('+r.status+')'));
+  btn.textContent='🔔 Notifications activées';
+  btn.disabled=false;
+  return true;
+}
+$('notifyBtn').onclick=async()=>{
+  const btn=$('notifyBtn'); btn.disabled=true; btn.textContent='🔔 Activation…';
+  try{await activatePushNotifications();}
+  catch(e){btn.textContent=Notification.permission==='granted'?'🔔 Réessayer les notifications':'🔔 Activer les notifications';alert(e.message||'Impossible d’activer les notifications.');btn.disabled=false;}
+};
+if('Notification' in window && Notification.permission==='granted') $('notifyBtn').textContent='🔔 Réactiver les notifications';
+enter();
+
+const FEATURED_FALLBACK=[{title:'Dune — Partie Deux',image_url:'https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg'}];
+let featuredFilms=[];
+async function loadFeaturedAdmin(){
+  const box=$('featuredCurrent'); if(!box)return;
+  const {data,error}=await sb.from('nox_featured').select('id,title,image_url,position,enabled').order('position');
+  if(error){box.innerHTML='<div class="error">Impossible de charger À LA UNE : '+escapeHtml(error.message)+'</div>';return;}
+  featuredFilms=data||[];
+  box.innerHTML=featuredFilms.length?featuredFilms.map(f=>`<div class="featured-current"><img src="${escapeAttr(f.image_url)}" alt=""><div style="flex:1"><strong>${escapeHtml(f.title)}</strong><div class="muted">Position ${f.position}</div></div><button class="danger" data-featured-remove="${f.id}">Retirer</button></div>`).join(''):'<div class="muted">Aucun film dans À LA UNE.</div>';
+  box.querySelectorAll('[data-featured-remove]').forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await sb.from('nox_featured').delete().eq('id',b.dataset.featuredRemove);if(error)alert(error.message);await loadFeaturedAdmin();});
+}
+async function findAutomaticPoster(title,year){
+  const clean=String(title||'').trim();
+  if(!clean)return '';
+  if(clean.toLowerCase()==='dune — partie deux') return 'https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg';
+  try{
+    const r=await fetch(cfg.supabaseUrl+'/functions/v1/nox-featured-poster',{method:'POST',headers:{'Authorization':'Bearer '+(session?.access_token||''),'apikey':cfg.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify({title:clean,year:year||''})});
+    const out=await r.json().catch(()=>({}));
+    if(r.ok&&out?.poster_url)return out.poster_url;
+  }catch(e){}
+  return 'https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/Image%20noxstream/'+encodeURIComponent(clean.replace(/[\\/:*?"<>|]/g,''));
+}
+async function searchFeaturedFilms(){
+  const q=$('featuredSearch')?.value.trim().toLowerCase(); const box=$('featuredSearchResults'); if(!box)return;
+  if(!q){box.innerHTML='';return;}
+  let catalog=[];
+  try{const r=await fetch('/Films/catalogue.json',{cache:'no-store'});if(r.ok)catalog=await r.json();}catch(e){}
+  const existing=[...catalog,{title:'Dune — Partie Deux',year:'2024',genre:'Science-fiction',file:'',posterClass:'poster-dune'}];
+  const seen=new Set(); const results=existing.filter(f=>{const t=String(f.title||'').toLowerCase();if(!t.includes(q)||seen.has(t))return false;seen.add(t);return true;}).slice(0,20);
+  if(!results.length){box.innerHTML='<div class="muted">Aucun film trouvé.</div>';return;}
+  box.innerHTML='<div class="featured-results">'+results.map(f=>{const fallback=f.title==='Dune — Partie Deux'?'https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg':('https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/Image%20noxstream/'+encodeURIComponent(String(f.title||'').replace(/[\\/:*?"<>|]/g,'')));return `<div class="featured-item"><img src="${escapeAttr(fallback)}" alt=""><strong>${escapeHtml(f.title)}</strong><div class="muted">${escapeHtml(f.year||'')} · affiche automatique HD</div><div class="featured-actions"><button data-featured-add="${escapeAttr(f.title)}" data-featured-year="${escapeAttr(f.year||'')}">Ajouter</button></div></div>`;}).join('')+'</div>';
+  box.querySelectorAll('[data-featured-add]').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='Ajout…';const title=b.dataset.featuredAdd;const image=await findAutomaticPoster(title,b.dataset.featuredYear);const max=(featuredFilms||[]).reduce((m,x)=>Math.max(m,Number(x.position)||0),0);const {error}=await sb.from('nox_featured').insert({title,image_url:image,position:max+1,enabled:true});if(error)alert(error.message);else $('featuredMessage').textContent='Film ajouté à À LA UNE avec son affiche.';await loadFeaturedAdmin();});
+}
+$('featuredSearch')?.addEventListener('input',searchFeaturedFilms);
+</script>
+</body>
+</html>

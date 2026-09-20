@@ -1,0 +1,120 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Le Plus beau pays du monde — NoxStream</title><link rel="stylesheet" href="../style.css"><style>
+/* Fiche film — disposition affiche + informations comme le modèle validé */
+.nox-film-wrap{min-height:100vh;padding:34px 20px 90px;display:flex;justify-content:center}
+.standalone-detail{position:relative;width:min(1000px,92vw);min-height:570px;border-radius:25px;overflow:hidden;background:#111419;border:1px solid #303640;box-shadow:0 30px 100px #000;margin:35px auto 0;padding:36px 38px 45px}
+.standalone-detail::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 22%,#77552d55,transparent 40%);pointer-events:none}
+.detail-top{position:relative;z-index:2;display:grid;grid-template-columns:260px minmax(0,1fr);gap:32px;align-items:start}
+.detail-art{position:relative;width:260px;height:390px;overflow:hidden;border-radius:20px;display:flex;align-items:center;justify-content:center}
+.detail-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;border-radius:19px}
+.detail-copy{position:relative;z-index:2;min-width:0;padding:8px 0 0}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#c9a75e}
+.detail-copy h1{font:500 48px Georgia,serif;margin:16px 0 18px;line-height:1.08}
+.meta{font-size:15px;color:#b0b5bc;line-height:1.6}
+.detail-copy p{color:#9da3aa;line-height:1.7;font-size:16px;margin:18px 0 0}
+.actions{display:flex;gap:10px;margin-top:22px}
+.primary,.secondary,.round{height:42px;border-radius:12px;padding:0 17px;font-weight:600;cursor:pointer;white-space:nowrap}
+.primary{background:#f1d28c;color:#17130a;border:0}.secondary{background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.round{width:46px;padding:0;background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.is-active{border-color:#e8c778!important;color:#f1d28c!important}
+.close-link{position:absolute;right:20px;top:18px;z-index:6;width:40px;height:40px;border:0;border-radius:50%;background:#ffffff12;color:#fff;font-size:24px;cursor:pointer}
+.detail-player{position:relative;z-index:2;margin-top:28px;border:1px solid #292f36;border-radius:18px;overflow:hidden;background:#080a0d;box-shadow:0 12px 35px #0005}
+.detail-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #20252b;background:#111419}.detail-player-head span{font-size:10px;letter-spacing:3px;color:#d0b16c}.detail-player-head small{font-size:11px;color:#737b84}
+.detail-player-screen{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(circle at center,#252a30,#080a0d 70%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detail-player-placeholder{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;font:inherit}.detail-player-placeholder[hidden]{display:none!important}
+.detail-player-play{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#f1d28c;color:#17130a;font-size:22px}.detail-player-placeholder span:last-child{font-size:13px;color:#d5d8dc}
+.detail-trailer-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}.detail-trailer-frame[hidden]{display:none!important}
+.detail-player-links{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;margin-top:18px}.player-version h2{margin:0 0 9px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff}.player-version-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.player-link-btn{min-height:38px;border:1px solid #343a42;background:#15181d;color:#fff;border-radius:11px;padding:0 13px;font-size:12px;font-weight:600;cursor:pointer}.player-link-btn:hover{background:#20252c;border-color:#e0c276;color:#f1d28c}.player-empty{display:block;min-height:1px}
+.back{display:block;max-width:1000px;width:min(1000px,92vw);margin:0 auto -5px;color:#e8c778;text-decoration:none;font-size:15px}
+@media(max-width:700px){
+ body.nox-film-page{background:#07090c}
+ .nox-film-wrap{padding:0 0 80px}
+ .back{width:auto;margin:20px 20px 0;font-size:14px}
+ .standalone-detail{width:94vw;min-height:0;margin:25px auto 0;border-radius:25px;padding:26px 18px 38px}
+ .detail-top{display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;align-items:start}
+ .detail-art{width:180px;height:270px;border-radius:18px;box-shadow:0 12px 30px #0008}
+ .detail-art img{border-radius:15px}
+ .detail-copy{padding:2px 0 0}
+ .eyebrow{font-size:9px;letter-spacing:2.5px}
+ .detail-copy h1{font-size:28px;line-height:1.08;margin:8px 0 12px}
+ .meta{font-size:12px;line-height:1.5}
+ .detail-copy p{font-size:13px;line-height:1.55;margin-top:12px}
+ .actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:8px;width:100%;margin-top:2px}
+ .primary,.secondary{height:40px;min-width:0;width:100%;padding:0 7px;font-size:12px}
+ .round{width:42px;height:40px;min-width:42px;font-size:18px}
+ .detail-player{grid-column:1/-1;margin-top:22px;border-radius:16px}
+ .detail-player-head{padding:10px 12px}
+ .detail-player-play{width:52px;height:52px;font-size:20px}
+ .detail-player-links{gap:16px}
+ .player-version-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .player-link-btn{min-height:36px;font-size:11px;padding:0 7px}
+ .close-link{right:12px;top:12px;width:40px;height:40px}
+}
+@media(max-width:390px){
+ .detail-top{grid-template-columns:120px minmax(0,1fr);gap:14px}
+ .detail-art{width:120px;height:180px}
+ .detail-copy h1{font-size:24px}
+ .meta{font-size:11px}
+ .detail-copy p{font-size:12px}
+}
+
+/* === FICHE FILM — disposition de référence fournie par l'utilisateur === */
+.nox-film-wrap{min-height:100vh;padding:34px 20px 90px;display:flex;justify-content:center}
+.standalone-detail{position:relative;width:min(1000px,92vw);min-height:0;border-radius:25px;overflow:hidden;background:#111419;border:1px solid #303640;box-shadow:0 30px 100px #000;margin:35px auto 0;padding:36px 38px 45px}
+.standalone-detail::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 22%,#77552d55,transparent 40%);pointer-events:none}
+.detail-top{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);gap:32px;align-items:start}
+.detail-art{position:relative;width:100%;height:auto;aspect-ratio:2/3;overflow:hidden;border-radius:22px;display:block;background:transparent!important;padding:0!important;border:0!important;box-shadow:none!important;clip-path:none!important}
+.detail-art .detail-poster{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover;object-position:center;border-radius:22px;border:0!important;box-shadow:none!important}
+.detail-copy{position:relative;z-index:2;min-width:0;padding:8px 0 0}
+.detail-copy h1{font:500 48px Georgia,serif;margin:16px 0 18px;line-height:1.08}
+.meta{font-size:15px;color:#b0b5bc;line-height:1.6}
+.detail-copy p{color:#9da3aa;line-height:1.7;font-size:16px;margin:18px 0 0}
+.synopsis-collapsed{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.synopsis-expanded{display:block}
+.synopsis-more{display:inline-flex;align-items:center;gap:8px;margin-top:10px;border:1px solid #ffffff18;background:#ffffff0d;color:#f1d28c;border-radius:12px;padding:9px 17px;font-size:13px;font-weight:600;cursor:pointer}
+.actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 46px;gap:10px;margin-top:22px;width:100%}
+.primary,.secondary,.round{height:42px;border-radius:12px;padding:0 13px;font-weight:600;cursor:pointer;white-space:nowrap;min-width:0}
+.primary{background:#f1d28c;color:#17130a;border:0}.secondary{background:#ffffff0d;color:#fff;border:1px solid #ffffff18}.round{width:46px;padding:0;background:#ffffff0d;color:#fff;border:1px solid #ffffff18}
+.detail-player{position:relative;z-index:2;margin-top:28px;border:1px solid #292f36;border-radius:18px;overflow:hidden;background:#080a0d;box-shadow:0 12px 35px #0005}
+.detail-player-head{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #20252b;background:#111419}
+.detail-player-head span{font-size:10px;letter-spacing:3px;color:#d0b16c}.detail-player-head small{font-size:11px;color:#737b84}
+.detail-player-screen{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(circle at center,#252a30,#080a0d 70%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detail-player-placeholder{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;font:inherit}.detail-player-placeholder[hidden]{display:none!important}
+.detail-player-play{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#f1d28c;color:#17130a;font-size:22px}
+.detail-player-placeholder span:last-child{font-size:13px;color:#d5d8dc}
+.detail-trailer-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}.detail-trailer-frame[hidden]{display:none!important}
+.detail-player-links{position:relative;z-index:2;display:flex;flex-direction:column;gap:18px;margin-top:18px}.player-version h2{margin:0 0 9px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff}.player-version-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.player-link-btn{min-height:38px;border:1px solid #343a42;background:#15181d;color:#fff;border-radius:11px;padding:0 13px;font-size:12px;font-weight:600;cursor:pointer}
+.back{display:block;max-width:1000px;width:min(1000px,92vw);margin:0 auto -5px;color:#e8c778;text-decoration:none;font-size:15px}
+@media(max-width:700px){
+ .nox-film-wrap{padding:0 0 80px}
+ .back{width:auto;margin:20px 20px 0;font-size:14px}
+ .standalone-detail{width:92vw;min-height:0;margin:25px auto 0;border-radius:25px;padding:24px 18px 38px}
+ .detail-top{grid-template-columns:minmax(0,38%) minmax(0,1fr);gap:16px;align-items:start}
+ .detail-art{width:100%;height:auto;aspect-ratio:2/3;border-radius:18px;margin:0}
+ .detail-art .detail-poster{width:100%!important;height:100%!important;object-fit:cover;border-radius:18px}
+ .detail-copy{padding:2px 0 0}
+ .eyebrow{font-size:9px;letter-spacing:2.5px}
+ .detail-copy h1{font-size:29px;line-height:1.08;margin:7px 0 12px}
+ .meta{font-size:12px;line-height:1.5}
+ .detail-copy p{font-size:13px;line-height:1.55;margin-top:12px}
+ .synopsis-more{font-size:12px;padding:7px 13px;margin-top:8px}
+ .actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:7px;width:100%;margin-top:14px}
+ .primary,.secondary{height:40px;width:100%;padding:0 5px;font-size:11px}
+ .round{width:42px;height:40px;min-width:42px;font-size:18px}
+ .detail-player{grid-column:1/-1;margin-top:24px;border-radius:16px}
+ .detail-player-head{padding:10px 12px}
+ .detail-player-play{width:52px;height:52px;font-size:20px}
+ .detail-player-links{gap:16px}
+ .player-version-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .player-link-btn{min-height:36px;font-size:11px;padding:0 7px}
+ .close-link{right:12px;top:12px;width:40px;height:40px}
+}
+@media(max-width:390px){
+ .standalone-detail{width:94vw;padding-left:14px;padding-right:14px}
+ .detail-top{grid-template-columns:minmax(0,37%) minmax(0,1fr);gap:12px}
+ .detail-copy h1{font-size:23px}
+ .meta{font-size:11px}
+ .detail-copy p{font-size:12px}
+ .actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px}
+ .round{width:40px;min-width:40px}
+}
+</style></head><body class="nox-film-page" data-film="Le Plus beau pays du monde" data-film-id="le-plus-beau-pays-du-monde">
+<script src="/site-header.js"></script>
+<a class="back" href="../index.html">← Retour à l'accueil</a><div class="nox-film-wrap"><section class="standalone-detail" aria-label="Fiche film"><button class="close-link" id="backButton" aria-label="Fermer">×</button><div class="detail-top"><div class="detail-art"><img class="detail-poster" data-film-poster alt="2:22"></div><div class="detail-copy"><div class="eyebrow">FICHE FILM</div><h1 id="filmTitle">Le Plus beau pays du monde</h1><div class="meta" id="filmMeta">2017  •  1h39min  •  HD Light  •  TrueFrench  •  Film Ancien , Action , Romance , Thriller</div><p id="filmSynopsis">Après avoir évité de justesse un crash aérien à 2h22, Dylan, un contrôleur aérien à la vie jusqu&#x27;alors bien réglée, voit son quotidien perturbé par une série de coïncidences étranges qui le conduisent inéluctablement au hall de la gare de Grand Central, à 2h22. Dylan est persuadé que son destin et celui de Sarah ? une jeune femme dont il vient de tomber amoureux ? sont liés, et que ces événements répétés sont en fait des signes prémonitoires. A eux de percer le mystère du temps.</p></div><div class="actions"><button class="primary" id="trailerButton">▶ Bande Annonce</button><button class="secondary" id="listButton">＋ Ma liste</button><button class="round" id="favButton">♡</button></div></div><div class="detail-player" id="detailPlayer"><div class="detail-player-head"><span>LECTEUR</span><small id="standalonePlayerStatus">Prêt à lancer</small></div><div class="detail-player-screen"><button class="detail-player-placeholder" id="standalonePlayerPlaceholder" type="button"><span class="detail-player-play">▶</span><span>Ouvrir le lecteur</span></button><iframe id="standalonePlayerFrame" class="detail-trailer-frame" hidden title="Lecteur vidéo" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div></div><div class="detail-player-links" id="standalonePlayerLinks" aria-label="Choisir un lecteur"></div></section></div><script>window.NOX_FILM_DATA={"title":"Le Plus beau pays du monde","image":"https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/Le_Plus_beau_pays_du_monde.jpg","trailer":"","readers":{"version_francaise":[{"name":"Voe","url":"https://rebeccapracticeloss.com/e/qdfsnqqjl2wb"},{"name":"DdStream","url":"https://playmogo.com/e/733nnmdzo8s2"},{"name":"uqload","url":"https://uqload.vc/embed-jl5evtwxd33w.html"},{"name":"Filelions","url":"https://morencius.com/v/pi68ldw7s7lg"},{"name":"Swish","url":"https://hanerix.com/e/pqbu6xwip1hn"},{"name":"netu","url":"https://waaw1.tv/e/6nFhhSMisP5W"}],"version_originale":[]},"year":"2013","genre":"Film Ancien , Documentaire","duration":"1h40min","quality":"HD Light","version":"French","origin":"du-monde.html\"> --> .rate_like > a, .rate_like-dislike { float: left; height: 22px; line-height: 22px; /* padding: 6px 12px; */ border: 1px solid #eaeaea; border-radius: 18px; text-decoration: none !important; font-weight: bold; color: #919191; -webkit-transition: all ease .2s; transition: all ease .2s; } .rate_like > a:hover { border-color: #3394e6; color: #3394e6; } .rate_like .icon { width: 16px; height: 15px; margin: -.2em .3em 0 0; } .rate_like-dislike > a { display: inline-block; width: 22px; height: 22px; text-align: center; } .rate_like-dislike > a .icon { width: 14px; height: 15px; fill: #787878; vertical-align: middle; margin: -.3em 0 0 0; } .rate_like-dislike > a:hover .icon { fill: #3394e6; } .rate_like-dislike .ratingplus { color: #88c54d; } .rate_like-dislike .ratingminus { color: #e45757; } .rate_like-dislike > span { cursor: default; margin: 0 .3em; } .after_rate {margin: 2 0 0 0;} .ratingzero { color: #6c838e; } .ratingtypeplusminus { padding: 0px 5px; } .ratingtypeplus { color: #6c838e; padding: 0px 0px 0px 5px; } .ratingplus { color: green; } .ratingminus { color: red; } li.clicbtn:last-child{ margin-bottom: 20px; } .mgbox { max-width: 80% !important; } .newmenu{ position: absolute; right: 10%; top: 40px; } .newmenu a { color: yellow; margin-right: 19px; } .newmenu a:hover { color: #d90000; } @media screen and (max-width: 950px){ .newmenu { display: none; } } .donstop { animation: color-change 1s infinite; } .g-recaptcha{ /*display: none;*/ } @keyframes color-change { 0% { color: yellow; } 50% { color: white; } 100% { color: #d90000; } } .newcarusel { padding: 20px 20px 0 22px; height: 350px; color: #fff; background-color: #000; } .caroustyle { height: 290px; } .caroustyle a .title1 { color: #fff; font-weight: 400; font-family: \"Open Sans\",sans-serif; margin: 15px 0 7px 0; font-size: 15px; } .caroustyle a .title0 { color: #ccc; font-size: 12px; color: #888; height: 17px; } .caroustyle a span{ text-align: center; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .caroustyle a{ text-decoration: none; } .caroustyle img { height: 200px; } .caroustyle .item a:hover img { opacity: 0.9; } .relatedcarrou { height: 290px; } .relatedcarrou a .title1 { color: #2a2a2a; font-weight: 400; font-family: \"Open Sans\",sans-serif; margin: 15px 0 7px 0; font-size: 15px; } .relatedcarrou a .title0 { color: #ccc; font-size: 12px; color: #888; height: 17px; } .relatedcarrou a span{ text-align: center; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .relatedcarrou a{ text-decoration: none; } .relatedcarrou img { height: 220px; } .relatedcarrou .item a:hover img { opacity: 0.9; } .owl-nav{ text-align: right; position: absolute; right: 0; top: -48px; } .owl-carousel .owl-stage, .relatedcarrou .owl-stage { height: 250px; } .owl-carousel .owl-stage-outer,.owl-carousel .owl-stage-outer { height: 255px; } /* css text moving*/ /*.marquee { margin-top: 7px; padding: 4px; white-space: nowrap; overflow: hidden; position: relative; width: 100%; background: #000; color: white; } .marquee span { display: inline-block; padding-left: 100%; animation: marquee 70s linear infinite; } .marquee span p { display: inline-block; margin-right: 500px; } @media only screen and (max-width: 600px) { .marquee span p { display: inline-block; margin-right: 500px; } } @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } } */ div.marquee { white-space:no-wrap; overflow:hidden; margin-top: 7px; padding: 4px; background: #000; color: white; } div.marquee span{ margin-right:300px; } div.marquee span:last-child(){ margin-right:0px; } div.marquee > div.marquee-text { white-space:nowrap; display:inline; width:auto; } .ui-widget-content { z-index: 99999; } flemmix Recherche dans le site","director":"Frédéric Fougea","actors":"Guillaume de Tonquédec , Arnaud Petit , Stéphanie Bodet , Nathan Willcocks","synopsis":"Montagnes aux neiges éternelles, canyons vertigineux, baies aux eaux limpides, majestueuses vallées, forêts aux arbres millénaires, grande barrière de corail? Les décors de la nature française, aussi spectaculaires que variés, nous subjuguent par leur beauté. Mais en dehors du plaisir manifeste qu'ils nous procurent que savons-nous d'eux ? Quelles vies les habitent ? Quelles sont les histoires qui les façonnent saison après saison ? Quels sont les secrets qu'ils peuvent nous livrer ? Imaginez le foisonnement des échanges et des services que se rendent les êtres vivants entre eux pour fabriquer cet équilibre qui nous enchante ! «?Le plus beau pays du monde?» va vous les montrer comme vous ne les avez jamais vus, dans une fantastique immersion au sein de l'univers animal qui nous entoure?"};</script><script src="../film-page.js"></script></body></html>
