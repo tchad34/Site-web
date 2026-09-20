@@ -8,14 +8,16 @@
     <a class="wordmark site-global-wordmark" href="${root}index.html">Nox<span>Stream</span></a>
     <nav class="topnav site-global-nav" aria-label="Navigation principale">
       <a class="toplink" href="${root}index.html">Accueil</a>
-      <a class="toplink" href="${root}films.html">Films</a>
-      <a class="toplink" href="${root}index.html#series">Séries</a>
-      <a class="toplink" href="${root}index.html#cinema">En ce moment</a>
-      <a class="toplink" href="${root}index.html#list">Ma liste</a>
     </nav>
-    <a class="search-mini site-global-search" href="${root}index.html" aria-label="Recherche">⌕ <span>Rechercher...</span></a>
+    <button class="search-mini site-global-search" type="button" aria-label="Recherche">⌕ <span>Rechercher...</span></button>
     <a class="avatar site-global-avatar" href="${root}index.html" aria-label="Profil">N</a>`;
   document.body.insertBefore(header, document.body.firstChild);
+  var search=header.querySelector('.site-global-search');
+  search.addEventListener('click',function(){
+    var searchOpen=document.getElementById('searchOpen');
+    if(searchOpen){searchOpen.click();return;}
+    window.location.href='/index.html#search';
+  });
   var burger=header.querySelector('.site-global-burger');
   burger.addEventListener('click',function(){
     var drawer=document.querySelector('.site-global-drawer');
