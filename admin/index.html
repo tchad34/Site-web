@@ -357,15 +357,60 @@ async function findAutomaticPoster(title,year){
   return 'https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/Image%20noxstream/'+encodeURIComponent(clean.replace(/[\\/:*?"<>|]/g,''));
 }
 async function searchFeaturedFilms(){
-  const q=$('featuredSearch')?.value.trim().toLowerCase(); const box=$('featuredSearchResults'); if(!box)return;
+  const q=$('featuredSearch')?.value.trim().toLowerCase();
+  const box=$('featuredSearchResults');
+  if(!box)return;
   if(!q){box.innerHTML='';return;}
-  let catalog=[];
-  try{const r=await fetch('/Films/catalogue.json',{cache:'no-store'});if(r.ok)catalog=await r.json();}catch(e){}
-  const existing=[...catalog,{title:'Dune — Partie Deux',year:'2024',genre:'Science-fiction',file:'',posterClass:'poster-dune'}];
-  const seen=new Set(); const results=existing.filter(f=>{const t=String(f.title||'').toLowerCase();if(!t.includes(q)||seen.has(t))return false;seen.add(t);return true;}).slice(0,20);
-  if(!results.length){box.innerHTML='<div class="muted">Aucun film trouvé.</div>';return;}
-  box.innerHTML='<div class="featured-results">'+results.map(f=>{const fallback=f.title==='Dune — Partie Deux'?'https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg':('https://pub-8f45777ec3cc4df7bbbac0efe48a9d90.r2.dev/Image%20noxstream/'+encodeURIComponent(String(f.title||'').replace(/[\\/:*?"<>|]/g,'')));return `<div class="featured-item"><img src="${escapeAttr(fallback)}" alt=""><strong>${escapeHtml(f.title)}</strong><div class="muted">${escapeHtml(f.year||'')} · affiche automatique HD</div><div class="featured-actions"><button data-featured-add="${escapeAttr(f.title)}" data-featured-year="${escapeAttr(f.year||'')}">Ajouter</button></div></div>`;}).join('')+'</div>';
-  box.querySelectorAll('[data-featured-add]').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='Ajout…';const title=b.dataset.featuredAdd;const image=await findAutomaticPoster(title,b.dataset.featuredYear);const max=(featuredFilms||[]).reduce((m,x)=>Math.max(m,Number(x.position)||0),0);const {error}=await sb.from('nox_featured').insert({title,image_url:image,position:max+1,enabled:true});if(error)alert(error.message);else $('featuredMessage').textContent='Film ajouté à À LA UNE avec son affiche.';await loadFeaturedAdmin();});
+
+  // « À LA UNE » est réservé aux films publiés dans « Sortie cinéma ».
+  // On ne propose donc jamais ici les films placés uniquement dans « Catalogue ».
+  let rows=[];
+  try{
+    const r=await sb.from('nox_cinema_films')
+      .select('slug,title,year,genre,image,placement')
+      .in('placement',['cinema','both'])
+      .order('created_at',{ascending:false})
+      .limit(200);
+    if(r.error)throw r.error;
+    rows=Array.isArray(r.data)?r.data:[];
+  }catch(e){
+    box.innerHTML='<div class="error">Impossible de charger les films de « Sortie cinéma ».</div>';
+    return;
+  }
+
+  const results=rows.filter(f=>{
+    const hay=String([f.title,f.year,f.genre].join(' ')).toLowerCase();
+    return hay.includes(q);
+  }).slice(0,20);
+
+  if(!results.length){
+    box.innerHTML='<div class="muted">Aucun film de « Sortie cinéma » trouvé.</div>';
+    return;
+  }
+
+  box.innerHTML='<div class="featured-results">'+results.map(f=>{
+    const fallback=f.image||'';
+    return `<div class="featured-item">
+      <img src="${escapeAttr(fallback)}" alt="">
+      <strong>${escapeHtml(f.title)}</strong>
+      <div class="muted">${escapeHtml(f.year||'')} · Sortie cinéma</div>
+      <div class="featured-actions">
+        <button data-featured-add="${escapeAttr(f.title)}" data-featured-year="${escapeAttr(f.year||'')}" data-featured-slug="${escapeAttr(f.slug||'')}" data-featured-image="${escapeAttr(f.image||'')}">Ajouter</button>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+
+  box.querySelectorAll('[data-featured-add]').forEach(b=>b.onclick=async()=>{
+    b.disabled=true;
+    b.textContent='Ajout…';
+    const title=b.dataset.featuredAdd;
+    const image=b.dataset.featuredImage||await findAutomaticPoster(title,b.dataset.featuredYear);
+    const max=(featuredFilms||[]).reduce((m,x)=>Math.max(m,Number(x.position)||0),0);
+    const {error}=await sb.from('nox_featured').insert({title,image_url:image,position:max+1,enabled:true});
+    if(error)alert(error.message);
+    else $('featuredMessage').textContent='Film ajouté à À LA UNE.';
+    await loadFeaturedAdmin();
+  });
 }
 $('featuredSearch')?.addEventListener('input',searchFeaturedFilms);
 </script>
