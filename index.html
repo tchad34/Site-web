@@ -883,71 +883,8 @@ setTimeout(function(){setupAdminPush();},300);
 </script>
 
 
-<script id="noxCinemaLiveSync">
-(function(){
-  'use strict';
-  var API='https://mvwtxamnwtnhzuyeaszp.supabase.co/rest/v1/nox_cinema_films';
-  var KEY='sb_publishable_s3hMkVzCD-0syFvft2hH6Q_bNnXj6V5';
-  var last=[];
-  function url(slug){return '/film.html?film='+encodeURIComponent(String(slug||''));}
-  function clear(el){if(el)el.innerHTML='';}
-  function card(f){
-    var a=document.createElement('a');
-    a.className='nox-reprise-card';
-    a.href=url(f.slug);
-    a.setAttribute('aria-label','Ouvrir la fiche de '+(f.title||'ce film'));
-    var im=document.createElement('img');
-    im.src=f.image||'';
-    im.alt=f.title||'Affiche';
-    im.loading='lazy';
-    im.decoding='async';
-    im.onerror=function(){im.remove();a.classList.add('no-poster');};
-    a.appendChild(im);
-    return a;
-  }
-  function renderHome(rows){
-    var row=document.getElementById('noxDernieresSortiesRow');
-    if(!row)return;
-    clear(row);
-    rows.slice(0,20).forEach(function(f){row.appendChild(card(f));});
-  }
-  function renderCinema(rows){
-    var rail=document.getElementById('cinemaRail');
-    if(rail){clear(rail);rows.forEach(function(f){rail.appendChild(card(f));});}
-    var feature=document.querySelector('#cinema .cinema-feature');
-    if(!feature||!rows.length)return;
-    var f=rows[0], art=feature.querySelector('.cinema-art'), title=feature.querySelector('h2'), copy=feature.querySelector('p'), button=feature.querySelector('button.primary');
-    if(art){art.style.backgroundImage=f.image?"url('"+String(f.image).replace(/'/g,"%27")+"')":'none';art.textContent='';art.style.backgroundSize='cover';art.style.backgroundPosition='center';art.style.cursor='pointer';art.onclick=function(){location.href=url(f.slug);};}
-    if(title)title.textContent=f.title||'';
-    if(copy)copy.textContent=f.synopsis||'Retrouvez la fiche complète du film.';
-    if(button){button.textContent='Plus d’infos';button.onclick=function(){location.href=url(f.slug);};}
-  }
-  function renderHero(featured){
-    var f=featured||last[0]; if(!f)return;
-    var hero=document.querySelector('.hero'), art=hero&&hero.querySelector('.hero-art.art-dune'), title=hero&&hero.querySelector('.hero-copy h1'), meta=hero&&hero.querySelector('.hero-copy .meta'), copy=hero&&hero.querySelector('.hero-copy p'), button=hero&&hero.querySelector('.hero-copy [data-film]');
-    if(art&&f.image)art.style.backgroundImage="url('"+String(f.image).replace(/'/g,"%27")+"')";
-    if(title)title.textContent=f.title||'';
-    if(meta)meta.textContent=[f.year,f.duration,f.genre,f.version||f.quality].filter(Boolean).join('  •  ');
-    if(copy)copy.textContent=f.synopsis||'Découvrez la fiche complète de ce film.';
-    if(button){button.dataset.film=f.title||'';button.onclick=function(){location.href=url(f.slug);};}
-  }
-  async function load(){
-    try{
-      var r=await fetch(API+'?select=slug,title,year,genre,duration,quality,version,synopsis,image,created_at&order=created_at.desc.nullslast&limit=50',{headers:{apikey:KEY,Accept:'application/json'},cache:'no-store'});
-      if(!r.ok)throw new Error('Supabase '+r.status);
-      var rows=await r.json();
-      last=Array.isArray(rows)?rows.filter(function(x){return x&&x.slug;}):[];
-      if(!last.length)return;
-      renderHome(last);
-      renderCinema(last);
-      renderHero(last[0]);
-    }catch(e){console.warn('NoxStream cinéma live:',e);}
-  }
-  function start(){load();setTimeout(load,1200);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.addEventListener('load',function(){setTimeout(load,250);},{once:true});
-})();
-</script>
+<script src="nox-cinema-live.js?v=20261008" defer></script>
+
 
 </body>
 </html>
