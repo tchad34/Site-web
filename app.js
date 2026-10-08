@@ -82,11 +82,12 @@ let films=[...fallbackFilms];
 function getMyList(){try{const a=JSON.parse(localStorage.getItem('noxstream_list')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function toggleMyList(title,btn){let a=getMyList();const i=a.indexOf(title);if(i>=0){a.splice(i,1);btn.textContent='＋';btn.setAttribute('aria-label','Ajouter à ma liste');btn.title='Ajouter à ma liste';btn.classList.remove('is-active')}else{a.push(title);btn.textContent='✓';btn.setAttribute('aria-label','Retirer de ma liste');btn.title='Retirer de ma liste';btn.classList.add('is-active')}try{localStorage.setItem('noxstream_list',JSON.stringify(a))}catch(e){};renderFilms()}
 function card(item){
-  const title=item[0], year=item[1], genre=item[2], poster=item[3], file=item[4]||"";
+  const title=item[0], year=item[1], genre=item[2], poster=item[3], file=item[4]||"", image=item[5]||"";
   const link=file ? `<a class="film-link" href="${file}" onclick="event.stopPropagation()">` : "";
   const end=file ? "</a>" : "";
   const active=getMyList().includes(title);
-  return `${link}<article class="card ${poster}" data-film="${title}"><b>${title}</b><small>${year} · ${genre}</small><button type="button" class="film-add${active?' is-active':''}" aria-label="${active?'Retirer de ma liste':'Ajouter à ma liste'}" title="${active?'Retirer de ma liste':'Ajouter à ma liste'}">${active?'✓':'＋'}</button></article>${end}`;
+  const style=image ? ` style="background-image:url('${String(image).replace(/'/g,"%27")}');background-size:cover;background-position:center"` : "";
+  return `${link}<article class="card ${poster}" data-film="${title}"${style}><b>${title}</b><small>${year} · ${genre}</small><button type="button" class="film-add${active?' is-active':''}" aria-label="${active?'Retirer de ma liste':'Ajouter à ma liste'}" title="${active?'Retirer de ma liste':'Ajouter à ma liste'}">${active?'✓':'＋'}</button></article>${end}`;
 }
 function fill(id,data){
   const el=document.getElementById(id);
@@ -119,12 +120,45 @@ async function loadFilmManifest(){
         x.year||"",
         x.genre||"",
         x.posterClass||"poster-batman",
-        x.file||""
+        x.file||"",
+        x.image||x.poster||""
       ]);
     }
   }catch(e){
     // Le site reste fonctionnel avec le catalogue de secours.
   }
+
+  // Les films ajoutés depuis l'onglet « Catalogue » sont également indexés
+  // dans la recherche, sans être ajoutés à « À LA UNE » ni à « Sortie cinéma ».
+  try{
+    const r=await fetch("https://mvwtxamnwtnhzuyeaszp.supabase.co/rest/v1/nox_cinema_films?select=slug,title,year,genre,image,placement,created_at&order=created_at.desc&limit=200",{
+      headers:{apikey:"sb_publishable_s3hMkVzCD-0syFvft2hH6Q_bNnXj6V5",Accept:"application/json"},
+      cache:"no-store"
+    });
+    if(r.ok){
+      const rows=await r.json();
+      const dynamic=(Array.isArray(rows)?rows:[])
+        .filter(x=>x && (x.placement==="catalogue" || x.placement==="both"))
+        .map(x=>[
+          x.title||"Film",
+          x.year||"",
+          x.genre||"",
+          "dynamic-catalogue-"+String(x.slug||""),
+          x.slug ? "film.html?film="+encodeURIComponent(x.slug) : "",
+          x.image||""
+        ]);
+      const seen=new Set();
+      films=[...dynamic,...films].filter(x=>{
+        const key=String(x[0]||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+        if(!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+  }catch(e){
+    console.warn("NoxStream: films Catalogue dynamiques indisponibles",e);
+  }
+
   renderAll();
 }
 
